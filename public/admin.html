@@ -677,7 +677,7 @@ function printOTPsWindow(electionId, electionTitle) {
     html += '</style></head><body>';
     for (let i = 0; i < otps.length; i += 32) {
       html += '<div class="page">';
-      const slice = otps.slice(i, i + 24);
+      const slice = otps.slice(i, i + 32);
       for (const o of slice) {
         html += '<div class="slip"><div class="otp">' + o.otp + '</div></div>';
       }
