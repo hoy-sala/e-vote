@@ -192,7 +192,7 @@ async function loadElections() {
     return;
   }
 
-  const hasActive = elections.some(e => e.status === 'active');
+  const hasActive = elections.some(e => e.status === 'active' && !e.is_mock);
   if (!hasActive) {
     list.appendChild(el('p', { style: 'color:#f57f17;font-size:13px;font-weight:600;margin-bottom:8px' }, '⚠ No active election. Please wait for the administrator to start one.'));
   }

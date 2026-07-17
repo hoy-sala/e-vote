@@ -472,7 +472,7 @@ app.post('/api/voter/verify-otp', (req, res) => {
   if (!booth) return res.status(404).json({ error: 'Invalid booth code' });
 
   const elections = db.getElections();
-  const active = elections.find(e => e.status === 'active');
+  const active = elections.find(e => e.status === 'active' && !e.is_mock);
   if (!active) return res.status(400).json({ error: 'No active election' });
 
   let otpRecord, voterResult;

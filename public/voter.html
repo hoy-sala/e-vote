@@ -574,7 +574,7 @@ async function restoreState() {
     }
     if (s.boothCode) {
       const elections = await api('/elections');
-      const hasActive = elections.some(e => e.status === 'active');
+      const hasActive = elections.some(e => e.status === 'active' && !e.is_mock);
       if (!hasActive) { localStorage.removeItem(STATE_KEY); return false; }
       showOTPEntry(s.boothCode);
       return true;
@@ -590,7 +590,7 @@ async function restoreState() {
   if (boothCode) currentBoothCode = boothCode.toUpperCase();
 
   const elections = await api('/elections');
-  const hasActive = elections.some(e => e.status === 'active');
+  const hasActive = elections.some(e => e.status === 'active' && !e.is_mock);
 
   const restored = await restoreState();
   if (!restored) {
@@ -616,7 +616,7 @@ function showNoActiveElection() {
     '<p style="color:#999;font-size:12px;margin-top:16px">Checking automatically...</p></div>';
   setTimeout(async () => {
     const elections = await api('/elections');
-    if (elections.some(e => e.status === 'active')) { showBoothLogin(); }
+    if (elections.some(e => e.status === 'active' && !e.is_mock)) { showBoothLogin(); }
     else { showNoActiveElection(); }
   }, 5000);
 }
@@ -639,7 +639,7 @@ function showBoothLogin() {
       const evmResult = await registerEvm();
       if (evmResult && evmResult.status === 'pending') { showAwaitingApproval(); return; }
       const elections = await api('/elections');
-      const hasActive = elections.some(e => e.status === 'active');
+      const hasActive = elections.some(e => e.status === 'active' && !e.is_mock);
       if (!hasActive) { showNoActiveElection(); return; }
       showOTPEntry(code);
     }}, 'Next')
@@ -741,7 +741,7 @@ function showOTPEntry(code) {
       sendEvmStatus('voting');
       evmApproved = true;
       const elections = await api('/elections');
-      const active = elections.find(e => e.status === 'active');
+      const active = elections.find(e => e.status === 'active' && !e.is_mock);
       if (!active) { showNoActiveElection(); return; }
 
       const verifyRes = await api('/voter/verify-otp', { method: 'POST', body: { boothCode: currentBoothCode, otp } });
