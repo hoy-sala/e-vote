@@ -12,7 +12,7 @@ d.exec('DELETE FROM booths');
 d.exec('DELETE FROM elections');
 d.close();
 
-const e1 = db.createElection('Mock Poll 2025', 'Demo mock election for testing');
+const e1 = db.createElection('Mock Poll 2025', 'Demo mock election for testing', true);
 db.setElectionStatus(e1.lastInsertRowid, 'active');
 const eid = e1.lastInsertRowid;
 
