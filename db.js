@@ -332,7 +332,6 @@ const api = {
       const placeholders = voterIds.map(() => '?').join(',');
       db.prepare(`UPDATE voters SET has_voted = 0, voted_at = NULL WHERE id IN (${placeholders})`).run(...voterIds);
     }
-    db.prepare('UPDATE otps SET is_used = 0, used_at = NULL WHERE election_id = ?').run(electionId);
     db.prepare('DELETE FROM voters WHERE booth_id IS NULL AND otp_id IS NULL').run();
   },
 
