@@ -110,7 +110,7 @@ function connectWs() {
   };
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
-    if (data.type === 'vote_cast' || data.type === 'voter_done' || data.type === 'election_status') {
+    if (data.type === 'vote_cast' || data.type === 'voter_done' || data.type === 'election_status' || data.type === 'votes_reset') {
       if (currentElectionId) refreshProgress(currentElectionId);
     }
     if (data.type === 'evm_added' || data.type === 'evm_status' || data.type === 'evm_vote') {
