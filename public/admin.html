@@ -671,11 +671,11 @@ function printOTPsWindow(electionId, electionTitle) {
     html += '@page { size: A4; margin: 8mm; }';
     html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
     html += 'body { font-family: "Anek Kannada", monospace; }';
-    html += '.page { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(6, 1fr); width: 194mm; height: 281mm; page-break-after: always; }';
-    html += '.slip { border: 1px dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; }';
-    html += '.otp { font-size: 22pt; font-weight: 900; letter-spacing: 4px; font-family: monospace; color: #1a1a2e; }';
+    html += '.page { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(8, 1fr); width: 194mm; height: 281mm; page-break-after: always; }';
+    html += '.slip { border: 1px dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }';
+    html += '.otp { font-size: 20pt; font-weight: 900; letter-spacing: 4px; font-family: monospace; color: #1a1a2e; }';
     html += '</style></head><body>';
-    for (let i = 0; i < otps.length; i += 24) {
+    for (let i = 0; i < otps.length; i += 32) {
       html += '<div class="page">';
       const slice = otps.slice(i, i + 24);
       for (const o of slice) {
