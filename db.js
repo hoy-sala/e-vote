@@ -375,7 +375,7 @@ const api = {
   },
 
   getVoterProgress(electionId) {
-    const voted = getDb().prepare('SELECT COUNT(*) as c FROM voters WHERE has_voted = 1').get();
+    const voted = getDb().prepare('SELECT COUNT(DISTINCT voter_id) as c FROM votes WHERE election_id = ?').get(electionId);
     const election = getDb().prepare('SELECT total_voters FROM elections WHERE id = ?').get(electionId);
     const total = (election && election.total_voters > 0) ? election.total_voters : getDb().prepare('SELECT COUNT(*) as c FROM voters').get().c;
     return { voted: voted.c, total };
