@@ -666,49 +666,25 @@ function printOTPsWindow(electionId, electionTitle) {
   ]).then(([otps, settings]) => {
     if (otps.length === 0) { alert(__('no_unused_otps')); return; }
     const schoolName = settings.school_name || '';
-    const schoolLogo = settings.school_logo_url || '';
     const win = window.open('', '_blank', 'width=800,height=600');
-    win.document.write('<html><head><title>' + __('otps') + ' - ' + electionTitle + '</title>');
-    win.document.write('<style>');
-    win.document.write('@page { size: A4; margin: 12mm 10mm; }');
-    win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
-    win.document.write('body { font-family: "Anek Kannada", Arial, sans-serif; }');
-    win.document.write('.page { display: flex; flex-wrap: wrap; align-content: flex-start; min-height: 277mm; padding: 3mm; page-break-after: always; }');
-    win.document.write('.slip { width: 50%; height: 64mm; padding: 3mm; }');
-    win.document.write('.slip-inner { border: 2px dashed #444; padding: 3mm 4mm; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; }');
-    win.document.write('.slip-header { text-align: center; margin-bottom: 1mm; }');
-    win.document.write('.slip-header .school { font-size: 7pt; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }');
-    win.document.write('.slip-header .election-title { font-size: 8pt; color: #1a1a2e; font-weight: 700; }');
-    win.document.write('.slip .otp { font-size: 26pt; font-weight: 900; letter-spacing: 5px; font-family: monospace; text-align: center; margin: 2mm 0; color: #1a1a2e; }');
-    win.document.write('.slip .field { border-bottom: 1px solid #888; padding: 1.5mm 0; margin: 1mm 0; min-height: 6mm; font-size: 10pt; }');
-    win.document.write('.slip .field-label { font-size: 7pt; color: #777; text-transform: uppercase; letter-spacing: 0.3px; }');
-    win.document.write('.slip .footer-text { text-align: center; font-size: 6.5pt; color: #999; margin-top: 1mm; }');
-    win.document.write('.slip-cut { position: absolute; top: 50%; left: -4px; width: 8px; height: 8px; background: #fff; border: 2px solid #444; border-radius: 50%; transform: translateY(-50%); }');
-    win.document.write('.slip-cut-r { right: -4px; left: auto; }');
-    win.document.write('</style></head><body>');
-
-    let page = win.document.createElement('div');
-    page.className = 'page';
-
-    otps.forEach((o, i) => {
-      if (i > 0 && i % 8 === 0) { win.document.body.appendChild(page); page = win.document.createElement('div'); page.className = 'page'; }
-      const slip = win.document.createElement('div');
-      slip.className = 'slip';
-      const candidateFields = otps.length <= 8 ? '' : ''; // always show fields
-      slip.innerHTML = '<div class="slip-inner">' +
-        '<div class="slip-cut"></div><div class="slip-cut slip-cut-r"></div>' +
-        '<div class="slip-header">' +
-          (schoolName ? '<div class="school">' + esc(schoolName) + '</div>' : '') +
-          '<div class="election-title">' + esc(electionTitle) + '</div>' +
-        '</div>' +
-        '<div class="otp">' + o.otp + '</div>' +
-        '<div class="field-label">' + __('name') + '</div><div class="field"></div>' +
-        '<div class="footer-text">Present this slip at the polling booth</div>' +
-      '</div>';
-      page.appendChild(slip);
-    });
-    win.document.body.appendChild(page);
-    win.document.write('</body></html>');
+    let html = '<html><head><title>OTPs - ' + esc(electionTitle) + '</title><style>';
+    html += '@page { size: A4; margin: 8mm; }';
+    html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
+    html += 'body { font-family: "Anek Kannada", monospace; }';
+    html += '.page { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(6, 1fr); width: 194mm; height: 281mm; page-break-after: always; }';
+    html += '.slip { border: 1px dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; }';
+    html += '.otp { font-size: 22pt; font-weight: 900; letter-spacing: 4px; font-family: monospace; color: #1a1a2e; }';
+    html += '</style></head><body>';
+    for (let i = 0; i < otps.length; i += 24) {
+      html += '<div class="page">';
+      const slice = otps.slice(i, i + 24);
+      for (const o of slice) {
+        html += '<div class="slip"><div class="otp">' + o.otp + '</div></div>';
+      }
+      html += '</div>';
+    }
+    html += '</body></html>';
+    win.document.write(html);
     win.document.close();
     setTimeout(() => { win.focus(); win.print(); }, 500);
   });
