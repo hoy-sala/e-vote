@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Vote</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%B3%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Anek+Kannada:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="/js/lang.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.lang-kn { font-family: 'Anek Kannada', 'Segoe UI', sans-serif; }
+.container { text-align: center; padding: 20px; max-width: 500px; }
+.logo { font-size: 64px; margin-bottom: 12px; }
+h1 { font-size: 32px; font-weight: 800; color: #ffd700; margin-bottom: 4px; }
+.subtitle { font-size: 16px; color: #888; margin-bottom: 36px; }
+.lang-row { margin-bottom: 24px; }
+.lang-toggle-link { background: none; border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; font-family: 'Anek Kannada', 'Space Grotesk', sans-serif; }
+.lang-toggle-link:hover { border-color: #fff; color: #fff; }
+.option-grid { display: flex; flex-direction: column; gap: 16px; }
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #2d2d44;
+  border: 2px solid #444;
+  border-radius: 16px;
+  padding: 24px;
+  text-decoration: none;
+  color: #fff;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-align: left;
+}
+.option-card:hover { border-color: #1565C0; background: #363658; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.option-icon { font-size: 40px; flex-shrink: 0; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: #1a1a2e; border-radius: 12px; }
+.option-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.option-text p { font-size: 13px; color: #888; }
+.admin-link { margin-top: 32px; }
+.admin-link a { color: #555; font-size: 13px; text-decoration: none; }
+.admin-link a:hover { color: #888; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">🗳️</div>
+  <h1 data-i18n="landing_title">e-Vote</h1>
+  <p class="subtitle" data-i18n="landing_subtitle">Student Council Election Platform</p>
+
+  <div class="lang-row" style="display:none">
+    <button class="lang-toggle-link" onclick="toggleLanguage()">ಕನ್ನಡ</button>
+  </div>
+
+  <div class="option-grid">
+    <a class="option-card" href="/voter">
+      <div class="option-icon">🖥️</div>
+      <div class="option-text">
+        <h2 data-i18n="register_as_evm">Register as EVM</h2>
+        <p data-i18n="register_as_evm_desc">Use this device as a voting machine for voters to cast their ballots</p>
+      </div>
+    </a>
+    <a class="option-card" href="/pro">
+      <div class="option-icon">📊</div>
+      <div class="option-text">
+        <h2 data-i18n="register_as_booth">Register as Booth</h2>
+        <p data-i18n="register_as_booth_desc">Monitor EVM status, turnout, and voting progress in real-time</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="admin-link">
+    <a href="/admin" data-i18n="admin_panel">Admin Panel</a>
+    <span style="margin:0 8px;color:#ccc">|</span>
+    <a href="/mock" style="color:#dc3545" data-i18n="mock_link">Try Mock Voting</a>
+  </div>
+</div>
+<script>
+initLanguage();
+</script>
+</body>
+</html>

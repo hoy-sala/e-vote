@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Vote Pro</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%B3%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/css/style.css">
+<script src="/js/lang.js"></script>
+<style>
+.progress-bar { display: flex; height: 24px; background: #e9ecef; border-radius: 12px; overflow: hidden; margin: 12px 0; }
+.progress-fill { background: #0f9b0f; height: 100%; transition: width 0.5s ease; }
+.progress-text { font-size: 14px; color: #666; text-align: center; margin-bottom: 12px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; }
+.stat-card { background: #f8f9fa; border-radius: 10px; padding: 10px 8px; text-align: center; }
+.stat-card .num { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+.stat-card .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.led { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+.led-green { background: #0f9b0f; box-shadow: 0 0 6px #0f9b0f; }
+.led-red { background: #dc3545; box-shadow: 0 0 6px #dc3545; }
+.led-off { background: #555; }
+.evm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 16px 0; }
+.evm-card { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; transition: all 0.2s; }
+.evm-card.ready { background: #e8f5e9; border: 2px solid #a5d6a7; }
+.evm-card.voting { background: #ffebee; border: 2px solid #ef9a9a; }
+.evm-card .evm-header { display: flex; justify-content: space-between; align-items: center; }
+.evm-card .evm-num { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+.evm-card .evm-status { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 12px; }
+.evm-card.ready .evm-status { background: #a5d6a7; color: #1b5e20; }
+.evm-card.voting .evm-status { background: #ef9a9a; color: #b71c1c; }
+.evm-card .evm-votes { font-size: 28px; font-weight: 900; color: #1a1a2e; text-align: center; padding: 8px 0; }
+.evm-card .evm-votes-label { font-size: 11px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.evm-empty { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.evm-section-title { font-size: 14px; font-weight: 700; color: #555; margin-top: 20px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.status-dot.ready { background: #0f9b0f; }
+.status-dot.voting { background: #dc3545; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1 data-i18n="preside_off">🗳️ e-Vote Presiding Officer</h1>
+  <div class="nav">
+    <span id="status-led" class="led led-off"></span>
+    <span id="status-text" data-i18n="not_connected">Not Connected</span>
+    <span id="lang-toggle-wrapper-pro"></span>
+  </div>
+</div>
+<div class="container" id="app">
+  <div id="login-view">
+    <div class="card" style="max-width:400px;margin:60px auto">
+      <h2 data-i18n="pro_login">Pro Booth Login</h2>
+      <p style="color:#666;margin-bottom:16px">Enter your 6-letter booth code to access voting progress.</p>
+      <div class="form-group">
+        <label>Booth Code</label>
+        <input type="text" id="token-input" placeholder="e.g., SCHOOL" style="font-family:monospace;text-align:center;font-size:20px;letter-spacing:4px;text-transform:uppercase" maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6)">
+      </div>
+      <button class="btn btn-primary" onclick="login()" style="width:100%" data-i18n="connect">Connect</button>
+    </div>
+  </div>
+
+  <div id="dashboard-view" style="display:none">
+    <div id="election-selector"></div>
+    <div id="progress-view" style="display:none">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 id="election-title"></h2>
+          <span id="election-status-badge" class="badge"></span>
+        </div>
+        <div class="progress-text" id="progress-text" data-i18n="waiting_votes">Waiting for votes...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="num" id="stat-voted">0</div><div class="label" data-i18n="votes_cast">Votes Cast</div></div>
+          <div class="stat-card"><div class="num" id="stat-total">0</div><div class="label" data-i18n="total_voters">Total Voters</div></div>
+          <div class="stat-card"><div class="num" id="stat-percent">0%</div><div class="label" data-i18n="turnout">Turnout</div></div>
+        </div>
+      </div>
+
+      <div class="evm-section-title" id="evms-title" data-i18n="evm_status">EVM Status</div>
+      <div id="evm-list" class="evm-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let ws = null;
+let booth = null;
+let currentElectionId = null;
+let currentBoothCode = null;
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) { const e = await res.json(); alert(e.error || 'Error'); throw new Error(e.error); }
+  return res.json();
+}
+
+function $(id) { return document.getElementById(id); }
+
+function connectWs() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host);
+  ws.onopen = () => {
+    $('status-led').className = 'led led-green';
+    $('status-text').textContent = __('connected');
+  };
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'vote_cast' || data.type === 'voter_done' || data.type === 'election_status') {
+      if (currentElectionId) refreshProgress(currentElectionId);
+    }
+    if (data.type === 'evm_added' || data.type === 'evm_status' || data.type === 'evm_vote') {
+      if (data.boothCode === currentBoothCode) refreshEvms();
+    }
+    if (data.type === 'booth_device_approved') {
+      if (!boothApproved) { boothApproved = true; location.reload(); }
+    }
+  };
+  ws.onclose = () => {
+    $('status-led').className = 'led led-off';
+    $('status-text').textContent = __('not_connected');
+    setTimeout(connectWs, 2000);
+  };
+}
+
+let boothApproved = false;
+
+function showAwaitingBoothApproval() {
+  const app = $('app');
+  app.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px;text-align:center;padding:40px">' +
+    '<div style="font-size:64px">⏳</div>' +
+    '<h2 style="color:#1a1a2e;font-size:24px">' + __('awaiting_approval') + '</h2>' +
+    '<p style="color:#666;font-size:16px;max-width:400px">' + __('booth_pending_desc') + '</p>' +
+    '<div style="width:40px;height:40px;border:4px solid #e0e0e0;border-top:4px solid #1a1a2e;border-radius:50%;animation:spin 1s linear infinite"></div>' +
+    '</div>';
+  // Spin keyframe
+  if (!document.getElementById('spin-key')) {
+    const s = document.createElement('style'); s.id = 'spin-key';
+    s.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+    document.head.appendChild(s);
+  }
+}
+
+async function waitForBoothApproval(timeout = 120000) {
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeout;
+    const check = async () => {
+      try {
+        const res = await api('/booth/device/register', { method: 'POST', body: { boothCode: currentBoothCode } });
+        if (res.status !== 'pending') { boothApproved = true; resolve(); return; }
+      } catch (e) {}
+      if (Date.now() > deadline) { reject(new Error('Approval timed out')); return; }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
+}
+
+async function login() {
+  const code = $('token-input').value.trim();
+  if (!code || code.length !== 6) return alert('Enter a valid 6-letter booth code');
+  try {
+    booth = await api('/booth/verify', { method: 'POST', body: { code } });
+    currentBoothCode = code;
+    localStorage.setItem('pro_state', JSON.stringify({ boothCode: code }));
+    // Register as booth device
+    const devRes = await api('/booth/device/register', { method: 'POST', body: { boothCode: code } });
+    if (devRes.status === 'pending') {
+      showAwaitingBoothApproval();
+      await waitForBoothApproval();
+    }
+    $('login-view').style.display = 'none';
+    $('dashboard-view').style.display = 'block';
+    connectWs();
+    loadElections();
+    refreshEvms();
+  } catch (e) { /* handled */ }
+}
+
+async function loadElections() {
+  const elections = await api('/elections');
+  const selector = $('election-selector');
+  selector.innerHTML = '<div class="card"><h2>' + __('select_election') + '</h2></div>';
+  const list = selector.querySelector('.card');
+
+  if (elections.length === 0) {
+    list.appendChild(el('p', { style: 'color:#999' }, __('no_elections_found')));
+    return;
+  }
+
+  const hasActive = elections.some(e => e.status === 'active');
+  if (!hasActive) {
+    list.appendChild(el('p', { style: 'color:#f57f17;font-size:13px;font-weight:600;margin-bottom:8px' }, '⚠ No active election. Please wait for the administrator to start one.'));
+  }
+
+  elections.forEach(e => {
+    const btn = el('button', {
+      className: 'btn ' + (e.status === 'active' ? 'btn-success' : e.status === 'closed' ? 'btn-warning' : ''),
+      style: 'display:block;width:100%;text-align:left;margin-bottom:8px',
+      onClick: () => selectElection(e.id)
+    }, e.title + ' (' + e.status + ')');
+    list.appendChild(btn);
+  });
+}
+
+async function selectElection(id) {
+  currentElectionId = id;
+  try {
+    const s = JSON.parse(localStorage.getItem('pro_state') || '{}');
+    s.electionId = id;
+    localStorage.setItem('pro_state', JSON.stringify(s));
+  } catch (e) {}
+  $('progress-view').style.display = 'block';
+  refreshProgress(id);
+  refreshEvms();
+}
+
+async function refreshProgress(id) {
+  const data = await api('/pro/election/' + id + '/progress');
+  $('election-title').textContent = data.election.title;
+  const badge = $('election-status-badge');
+  badge.textContent = data.election.status;
+  badge.className = 'badge badge-' + data.election.status;
+
+  const pct = data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0';
+  $('stat-voted').textContent = data.progress.voted;
+  $('stat-total').textContent = data.progress.total;
+  $('stat-percent').textContent = pct + '%';
+  $('progress-fill').style.width = pct + '%';
+  $('progress-text').textContent = data.progress.total > 0
+    ? data.progress.voted + ' ' + __('of_voters') + ' ' + data.progress.total + ' ' + __('voters_percent') + ' (' + pct + '%)'
+    : __('no_voters');
+}
+
+async function refreshEvms() {
+  if (!currentBoothCode) return;
+  const list = $('evm-list');
+  try {
+    const evms = await api('/pro/booth/' + currentBoothCode + '/evms');
+    list.innerHTML = '';
+    if (evms.length === 0) {
+      list.innerHTML = '<div class="evm-empty">' + __('no_evms_connected') + '</div>';
+      return;
+    }
+    evms.forEach(evm => {
+      const card = el('div', { className: 'evm-card ' + evm.status });
+      card.innerHTML =
+        '<div class="evm-header">' +
+          '<span class="evm-num">EVM #' + evm.evm_number + '</span>' +
+          '<span class="evm-status"><span class="status-dot ' + evm.status + '"></span>' + evm.status + '</span>' +
+        '</div>' +
+        '<div class="evm-votes">' + evm.votes_cast + '</div>' +
+        '<div class="evm-votes-label">' + __('votes_cast') + '</div>';
+      list.appendChild(card);
+    });
+  } catch (e) {}
+}
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => { if (k === 'className') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v); else e.setAttribute(k, v); });
+  children.forEach(c => { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else if (c) e.appendChild(c); });
+  return e;
+}
+
+// Check URL params first, then saved session
+const params = new URLSearchParams(location.search);
+const urlCode = params.get('booth') || params.get('token');
+if (urlCode) {
+  $('token-input').value = urlCode;
+  login();
+} else {
+  (async function restorePro() {
+    try {
+      const raw = localStorage.getItem('pro_state');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const boothCode = s.boothCode;
+        if (boothCode) {
+          $('token-input').value = boothCode;
+          booth = await api('/booth/verify', { method: 'POST', body: { code: boothCode } });
+          currentBoothCode = boothCode;
+          // Check booth device approval status
+          const devRes = await api('/booth/device/register', { method: 'POST', body: { boothCode } });
+          if (devRes.status === 'pending') {
+            showAwaitingBoothApproval();
+            connectWs();
+            await waitForBoothApproval();
+          }
+          $('login-view').style.display = 'none';
+          $('dashboard-view').style.display = 'block';
+          connectWs();
+          await loadElections();
+          refreshEvms();
+          if (s.electionId) selectElection(s.electionId);
+        }
+      }
+    } catch (e) {}
+  })();
+}
+
+initLanguage();
+</script>
+</body>
+</html>

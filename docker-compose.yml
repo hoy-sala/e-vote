@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  evote:
+    build: .
+    ports:
+      - "5050:5050"
+    volumes:
+      - /opt/apps/e-vote/data:/app/data
+      - /opt/apps/e-vote/uploads:/app/uploads
+    restart: unless-stopped

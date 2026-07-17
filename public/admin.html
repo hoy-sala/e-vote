@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Vote Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%B3%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Anek+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; display: flex; }
+body.lang-kn { font-family: 'Anek Kannada', 'Segoe UI', sans-serif; }
+body.lang-kn input, body.lang-kn textarea, body.lang-kn select, body.lang-kn button { font-family: 'Anek Kannada', 'Segoe UI', sans-serif; }
+.sidebar { width: 220px; background: #1a1a2e; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-head { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+.sidebar-head span { color: #ffd700; }
+.sidebar-nav { flex: 1; padding: 8px; }
+.sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; transition: all 0.15s; cursor: pointer; margin-bottom: 2px; }
+.sidebar-nav a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.sidebar-nav a.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
+.sidebar-nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+.sidebar-foot { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; }
+.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; height: 100vh; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e0e0e0; flex-shrink: 0; }
+.topbar h1 { font-size: 18px; font-weight: 700; }
+.topbar .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; }
+.content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.card-header h2 { font-size: 16px; font-weight: 700; }
+.card-header h3 { font-size: 15px; font-weight: 700; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-draft { background: #e0e0e0; color: #555; }
+.badge-active { background: #e8f5e9; color: #2e7d32; }
+.badge-closed { background: #fce4ec; color: #c62828; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-primary { background: #1a1a2e; color: #fff; }
+.btn-primary:hover { background: #2d2d44; }
+.btn-success { background: #2e7d32; color: #fff; }
+.btn-success:hover { background: #388e3c; }
+.btn-warning { background: #f57f17; color: #fff; }
+.btn-warning:hover { background: #f9a825; }
+.btn-danger { background: #c62828; color: #fff; }
+.btn-danger:hover { background: #d32f2f; }
+input, textarea, select { width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; margin-bottom: 12px; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: #1a1a2e; }
+label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.form-group { margin-bottom: 12px; }
+.form-group:last-child { margin-bottom: 0; }
+.empty-state { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: #fff; border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.crop-modal { max-width: 600px; }
+.crop-container { position: relative; width: 100%; aspect-ratio: 1; background: #111; border-radius: 12px; overflow: hidden; margin: 12px 0; }
+.crop-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; cursor: grab; transition: transform 0.15s; }
+.crop-container img.dragging { cursor: grabbing; }
+.crop-overlay { position: absolute; inset: 0; }
+.crop-overlay::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.crop-overlay::after { content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%; border: 2px solid #fff; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
+.align-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px 0; }
+.align-btn { padding: 8px; border: 2px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 12px; text-align: center; transition: all 0.15s; }
+.align-btn:hover { background: #e8e8e8; }
+.align-btn.active { border-color: #1a1a2e; background: #1a1a2e; color: #fff; }
+.zoom-controls { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.zoom-controls button { width: 36px; height: 36px; border: 2px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 18px; font-weight: 700; }
+.zoom-controls button:hover { background: #e8e8e8; }
+.zoom-controls span { font-size: 14px; color: #666; min-width: 50px; text-align: center; }
+.crop-preview { display: flex; gap: 12px; align-items: center; margin: 8px 0; padding: 12px; background: #f8f9fa; border-radius: 8px; }
+.crop-preview img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd; }
+.crop-preview span { font-size: 13px; color: #666; }
+.upload-btn-wrapper { position: relative; display: inline-block; }
+.upload-btn-wrapper input[type=file] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.otp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; margin: 12px 0; }
+.otp-item { padding: 10px; background: #f0f8ff; border: 1px solid #b8d4e8; border-radius: 8px; text-align: center; font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+.otp-item.used { background: #f0f0f0; border-color: #ddd; color: #999; text-decoration: line-through; }
+@media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } }
+.print-slip { width: 100%; height: 100%; padding: 20px; box-sizing: border-box; }
+.print-slip-page { page-break-after: always; display: flex; flex-wrap: wrap; align-items: flex-start; padding: 20px; }
+.print-slip-item { width: 50%; height: 140px; border: 2px dashed #333; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+.print-slip-item .otp-big { font-size: 32px; font-weight: 900; letter-spacing: 6px; font-family: monospace; text-align: center; margin: 8px 0; }
+.print-slip-item .field { border-bottom: 1px solid #333; padding: 4px 0; margin: 4px 0; min-height: 24px; font-size: 14px; }
+.print-slip-item .field-label { font-size: 11px; color: #666; }
+.results-progress-bar { display: flex; height: 24px; background: #e9ecef; border-radius: 12px; overflow: hidden; margin: 12px 0; }
+.results-progress-fill { background: #0f9b0f; height: 100%; transition: width 0.5s ease; }
+.results-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+.results-stat-card { background: #f8f9fa; border-radius: 10px; padding: 16px; text-align: center; }
+.results-stat-card .num { font-size: 36px; font-weight: 800; color: #1a1a2e; }
+.results-stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.position-results { margin: 16px 0; page-break-inside: avoid; }
+.position-results h3 { margin-bottom: 8px; }
+.candidate-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 4px; }
+.candidate-result .name { font-weight: 600; }
+.candidate-result .count { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+.candidate-result .bar-bg { flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; margin: 0 12px; }
+.candidate-result .bar-fill { height: 100%; background: #1a1a2e; border-radius: 4px; transition: width 0.5s; }
+@media print { body * { visibility: hidden; } .results-print, .results-print * { visibility: visible; } .results-print { position: absolute; left: 0; top: 0; width: 100%; } } @media print { @page { margin: 20mm 15mm; } }
+.election-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; padding: 4px 0; }
+.election-summary:hover h3 { color: #1565C0; }
+.expand-icon { font-size: 10px; color: #999; }
+.election-open { border: 2px solid #1a1a2e !important; }
+.election-detail { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0; }
+.tab-bar { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 12px; }
+.tab-btn { padding: 8px 16px; font-size: 13px; font-weight: 600; border: none; background: none; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+.tab-btn:hover { color: #1a1a2e; }
+.tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; }
+.tab-content { min-height: 100px; }
+.election-actions { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-size: 15px; color: #555; background: transparent; }
+.icon-btn:hover { background: #f0f0f0; color: #1a1a2e; }
+.icon-btn.danger:hover { background: #fce4ec; color: #c62828; }
+.icon-btn.success:hover { background: #e8f5e9; color: #2e7d32; }
+.icon-btn.warning:hover { background: #fff8e1; color: #f57f17; }
+.page-section { display: none; }
+.page-section.active { display: block; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.modal-actions .btn { padding: 8px 20px; }
+.toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .3s; border-radius: 20px; }
+.toggle-slider::before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: .3s; }
+.toggle-switch input:checked + .toggle-slider { background: #0f9b0f; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+.toggle-switch input:disabled + .toggle-slider { background: #ccc; cursor: not-allowed; }
+.toggle-switch input:disabled + .toggle-slider::before { background: #999; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-head">🗳️ e-Vote <span>Admin</span></div>
+  <div class="sidebar-nav">
+    <a class="active" data-page="elections" onclick="showPage('elections')"><span class="icon">📋</span> <span data-i18n="elections">Elections</span></a>
+    <a data-page="booths" onclick="showPage('booths')"><span class="icon">🏢</span> <span data-i18n="booths">Booths</span></a>
+    <a data-page="bindings" onclick="showPage('bindings')"><span class="icon">🔗</span> <span data-i18n="ip_bindings">IP Bindings</span></a>
+    <a data-page="evms" onclick="showPage('evms')"><span class="icon">🖥️</span> <span data-i18n="evms">EVMs</span></a>
+    <a data-page="settings" onclick="showPage('settings')"><span class="icon">⚙️</span> <span data-i18n="settings">Print Settings</span></a>
+  </div>
+  <div class="sidebar-foot"><span id="lang-toggle-wrapper"></span></div>
+</div>
+<div class="main-area">
+  <div class="topbar">
+    <h1 id="page-title" data-i18n="elections">Elections</h1>
+  </div>
+  <div class="content">
+    <div id="election-list" class="page-section active"></div>
+    <div id="booth-section" class="page-section"></div>
+    <div id="binding-section" class="page-section"></div>
+    <div id="evm-section" class="page-section"></div>
+    <div id="setting-section" class="page-section"></div>
+    <div id="results-view" style="display:none"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<div id="crop-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeCropModal()">
+  <div class="modal crop-modal" id="crop-modal-content"></div>
+</div>
+
+<script src="/js/lang.js"></script>
+<script>
+const API = '/api';
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: opts.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body instanceof FormData ? opts.body : (opts.body ? JSON.stringify(opts.body) : undefined)
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({ error: 'Error' })); alert(e.error || 'Error'); throw new Error(e.error); }
+  return res.json();
+}
+
+function $(id) { return document.getElementById(id); }
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => { if (k === 'className') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v); else e.setAttribute(k, v); });
+  children.forEach(c => { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else if (c) e.appendChild(c); });
+  return e;
+}
+
+function showModal(content) { $('modal-content').innerHTML = ''; $('modal-content').appendChild(content); $('modal').style.display = 'flex'; }
+function closeModal() { $('modal').style.display = 'none'; }
+function fmtClass(cls) { if (!cls) return ''; return cls + (typeof currentLang !== 'undefined' && currentLang === 'kn' ? '\u0CA8\u0CC7 \u0CA4\u0CB0\u0C97\u0CA4\u0CBF' : 'th Standard'); }
+
+// --- Crop Tool ---
+let cropState = null;
+
+function showCropModal(targetInput, existingUrl) {
+  const mc = $('crop-modal-content');
+  mc.innerHTML = '';
+  const container = el('div', {});
+  container.appendChild(el('h2', {}, __('crop_upload')));
+  const uploadBtn = el('div', { className: 'upload-btn-wrapper', style: 'margin-bottom:12px' },
+    el('button', { className: 'btn btn-primary' }, __('choose_image')),
+    el('input', { type: 'file', accept: 'image/*', onInput: (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => initCropper(ev.target.result, container, targetInput);
+      reader.readAsDataURL(file);
+    }})
+  );
+  if (existingUrl) {
+    uploadBtn.appendChild(el('button', { className: 'btn btn-sm', style: 'background:#e8e8e8;margin-left:8px', onClick: () => initCropper(existingUrl, container, targetInput) }, __('use_existing')));
+  }
+  container.appendChild(uploadBtn);
+  const previewRow = el('div', { className: 'crop-preview', id: 'crop-preview', style: 'display:none' });
+  container.appendChild(previewRow);
+  mc.appendChild(container);
+  $('crop-modal').style.display = 'flex';
+}
+
+function initCropper(imgSrc, container, targetInput) {
+  const old = container.querySelector('.crop-container');
+  if (old) old.remove();
+  const oldControls = container.querySelector('.crop-controls');
+  if (oldControls) oldControls.remove();
+
+  const cropDiv = el('div', { className: 'crop-container' });
+  const img = el('img', { src: imgSrc, id: 'crop-img' });
+  const overlay = el('div', { className: 'crop-overlay' });
+  cropDiv.appendChild(img);
+  cropDiv.appendChild(overlay);
+  container.insertBefore(cropDiv, container.querySelector('#crop-preview'));
+
+  const controls = el('div', { className: 'crop-controls' });
+  controls.appendChild(el('div', { className: 'zoom-controls' },
+    el('button', { onClick: () => adjustZoom(-0.1) }, '-'),
+    el('span', { id: 'zoom-label' }, '100%'),
+    el('button', { onClick: () => adjustZoom(0.1) }, '+')
+  ));
+  controls.appendChild(el('p', { style: 'font-size:12px;font-weight:600;color:#555;margin:8px 0 4px' }, __('alignment')));
+  const alignGrid = el('div', { className: 'align-grid' });
+  const positions = ['top-left','top-center','top-right','center-left','center-center','center-right','bottom-left','bottom-center','bottom-right'];
+  const posLabels = ['TL','TC','TR','CL','CC','CR','BL','BC','BR'];
+  cropState = { scale: 1, alignX: 0, alignY: 0, imgSrc, targetInput };
+  let currentAlign = 'center-center';
+  positions.forEach((p, i) => {
+    const btn = el('button', { className: 'align-btn' + (p === 'center-center' ? ' active' : ''), onClick: () => {
+      document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAlign = p;
+      updateCropTransform(p);
+    }}, posLabels[i]);
+    alignGrid.appendChild(btn);
+  });
+  controls.appendChild(alignGrid);
+  const preview = container.querySelector('#crop-preview');
+  preview.innerHTML = '<img id="crop-result-preview" src="' + imgSrc + '"> <span>' + __('crop_preview') + '</span>';
+  preview.style.display = 'flex';
+  controls.appendChild(el('div', { style: 'display:flex;gap:8px;justify-content:flex-end;margin-top:12px' },
+    el('button', { className: 'btn', onClick: closeCropModal }, __('cancel')),
+    el('button', { className: 'btn btn-primary', onClick: () => doCrop(targetInput) }, __('crop_save'))
+  ));
+  container.appendChild(controls);
+  cropState.container = cropDiv;
+  cropState.img = img;
+
+  // Clean up previous drag listeners
+  if (cropState._cleanup) cropState._cleanup();
+  let isDragging = false, startX, startY, startAX, startAY;
+  const onMouseDown = (e) => {
+    isDragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startAX = cropState.alignX; startAY = cropState.alignY;
+    img.classList.add('dragging');
+  };
+  const onMouseMove = (e) => {
+    if (!isDragging) return;
+    const dx = (e.clientX - startX) / cropDiv.offsetWidth;
+    const dy = (e.clientY - startY) / cropDiv.offsetHeight;
+    cropState.alignX = Math.max(-0.5, Math.min(0.5, startAX + dx));
+    cropState.alignY = Math.max(-0.5, Math.min(0.5, startAY + dy));
+    updateCropTransform();
+  };
+  const onMouseUp = () => { if (isDragging) { isDragging = false; img.classList.remove('dragging'); } };
+  img.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+  cropState._cleanup = () => {
+    img.removeEventListener('mousedown', onMouseDown);
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+}
+
+function adjustZoom(delta) {
+  if (!cropState) return;
+  cropState.scale = Math.max(0.5, Math.min(3, cropState.scale + delta));
+  document.getElementById('zoom-label').textContent = Math.round(cropState.scale * 100) + '%';
+  updateCropTransform();
+}
+
+function updateCropTransform(align) {
+  if (!cropState) return;
+  if (align) {
+    const map = {
+      'top-left': [-0.5, -0.5], 'top-center': [0, -0.5], 'top-right': [0.5, -0.5],
+      'center-left': [-0.5, 0], 'center-center': [0, 0], 'center-right': [0.5, 0],
+      'bottom-left': [-0.5, 0.5], 'bottom-center': [0, 0.5], 'bottom-right': [0.5, 0.5]
+    };
+    const [ax, ay] = map[align] || [0, 0];
+    cropState.alignX = ax; cropState.alignY = ay;
+  }
+  const s = cropState.scale;
+  const tx = cropState.alignX * (s - 1) * 100;
+  const ty = cropState.alignY * (s - 1) * 100;
+  cropState.img.style.transform = 'scale(' + s + ') translate(' + tx + '%, ' + ty + '%)';
+  updatePreview();
+}
+
+function updatePreview() {
+  if (!cropState) return;
+  const img = cropState.img;
+  const container = cropState.container;
+  const preview = document.getElementById('crop-result-preview');
+  if (!preview) return;
+  const canvas = document.createElement('canvas');
+  const cropSize = 200;
+  canvas.width = cropSize; canvas.height = cropSize;
+  const ctx = canvas.getContext('2d');
+  const rect = container.getBoundingClientRect();
+  const imgRect = img.getBoundingClientRect();
+  const sx = (rect.left - imgRect.left) / imgRect.width * img.naturalWidth;
+  const sy = (rect.top - imgRect.top) / imgRect.height * img.naturalHeight;
+  const sw = rect.width / imgRect.width * img.naturalWidth;
+  const sh = rect.height / imgRect.height * img.naturalHeight;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cropSize, cropSize);
+  preview.src = canvas.toDataURL('image/jpeg', 0.9);
+}
+
+async function doCrop(targetInput) {
+  if (!cropState) return;
+  const preview = document.getElementById('crop-result-preview');
+  if (!preview) return;
+  const res = await fetch(preview.src);
+  const blob = await res.blob();
+  const formData = new FormData();
+  formData.append('image', blob, 'crop.jpg');
+  const result = await api('/upload', { method: 'POST', body: formData });
+  targetInput._uploadedUrl = result.url;
+  targetInput.value = result.url;
+  const thumb = document.getElementById(targetInput.id + '-thumb');
+  if (thumb) { thumb.src = result.url; thumb.style.display = 'inline-block'; }
+  closeCropModal();
+}
+
+function closeCropModal() { $('crop-modal').style.display = 'none'; cropState = null; }
+
+// --- Page Navigation ---
+function showPage(name) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  const titles = { elections: 'elections', booths: 'booths', bindings: 'ip_bindings', evms: 'evms', settings: 'settings' };
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  const link = document.querySelector('.sidebar-nav a[data-page="' + name + '"]');
+  if (link) link.classList.add('active');
+  if (name === 'elections') { $('election-list').classList.add('active'); }
+  else if (name === 'booths') { $('booth-section').classList.add('active'); loadBooths(); }
+  else if (name === 'bindings') { $('binding-section').classList.add('active'); loadBindings(); }
+  else if (name === 'evms') { $('evm-section').classList.add('active'); loadPendingEvms(); }
+  else if (name === 'settings') { $('setting-section').classList.add('active'); loadSettings(); }
+  $('page-title').textContent = __(titles[name] || 'elections');
+}
+
+// --- Elections ---
+
+let selectedElectionId = null;
+
+async function loadElections() {
+  const elections = await api('/elections');
+  const list = $('election-list');
+  list.innerHTML = '';
+  const header = el('div', { className: 'card-header' },
+    el('h2', {}, __('elections')),
+    el('div', { style: 'display:flex;gap:6px' },
+      el('button', { className: 'btn', style: 'background:#6c757d;color:#fff;font-size:12px;padding:6px 10px', onClick: generateMockElection }, '\uD83D\uDDBC\uFE0F ' + __('mock_election')),
+      el('button', { className: 'btn btn-primary', onClick: showNewElectionForm }, __('new_election'))
+    )
+  );
+  list.appendChild(header);
+  if (elections.length === 0) {
+    list.appendChild(el('div', { className: 'card empty-state' }, el('p', {}, __('no_elections'))));
+    return;
+  }
+  const realElections = elections.filter(e => !e.is_mock);
+  const mockElections = elections.filter(e => e.is_mock);
+
+  function renderElectionCard(e) {
+    const isOpen = selectedElectionId === e.id;
+    const card = el('div', { className: 'card' + (isOpen ? ' election-open' : '') });
+    const summary = el('div', {
+      className: 'election-summary',
+      onClick: () => {
+        if (selectedElectionId === e.id) { selectedElectionId = null; loadElections(); return; }
+        selectedElectionId = e.id;
+        loadElections();
+        setTimeout(() => renderElectionTabs(e.id), 50);
+      }
+    });
+    summary.innerHTML =
+      '<div style="flex:1;cursor:pointer;min-width:0">' +
+        '<h3 style="margin-bottom:2px;font-size:15px">' + (e.is_mock ? '<span style="background:#ff9800;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-right:6px">MOCK</span>' : '') + esc(e.title) + '</h3>' +
+        (e.description ? '<p style="color:#666;font-size:12px;margin:0">' + esc(e.description) + '</p>' : '') +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
+        (e.status !== 'closed' ?
+          '<label class="toggle-switch" onclick="event.stopPropagation()">' +
+            '<input type="checkbox" ' + (e.status === 'active' ? 'checked' : '') + ' onchange="toggleElectionActive(' + e.id + ', this.checked)">' +
+            '<span class="toggle-slider"></span>' +
+          '</label>' : '') +
+        '<span class="badge badge-' + e.status + '">' + e.status + '</span>' +
+        '<span class="expand-icon">' + (isOpen ? '\u25B2' : '\u25BC') + '</span>' +
+      '</div>';
+    card.appendChild(summary);
+    if (!isOpen) {
+      const actions = el('div', { className: 'election-actions', style: 'margin-top:8px' });
+      actions.appendChild(el('button', { className: 'icon-btn', title: __('edit'), onClick: (ev) => { ev.stopPropagation(); editElection(e); } }, '\u270F\uFE0F'));
+      if (e.status === 'active') {
+        actions.appendChild(el('button', { className: 'icon-btn warning', title: __('close'), onClick: (ev) => { ev.stopPropagation(); closeElection(e.id); } }, '\uD83D\uDD12'));
+      }
+      actions.appendChild(el('button', { className: 'icon-btn', title: __('reset_votes'), style: 'color:#6c757d', onClick: (ev) => { ev.stopPropagation(); resetElectionVotes(e.id); } }, '\uD83D\uDD04'));
+      actions.appendChild(el('button', { className: 'icon-btn danger', title: __('delete'), onClick: (ev) => { ev.stopPropagation(); deleteElection(e.id); } }, '\uD83D\uDDD1\uFE0F'));
+      card.appendChild(actions);
+    }
+    if (isOpen) {
+      card.appendChild(el('div', { className: 'election-detail', id: 'election-detail-' + e.id }));
+    }
+    return card;
+  }
+
+  if (realElections.length > 0) {
+    const sectionLabel = el('div', { style: 'padding:8px 12px;font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px' }, '\uD83C\uDFDB\uFE0F Real Elections');
+    list.appendChild(sectionLabel);
+    realElections.forEach(e => list.appendChild(renderElectionCard(e)));
+  }
+  if (mockElections.length > 0) {
+    const sectionLabel = el('div', { style: 'padding:8px 12px;font-size:12px;font-weight:700;color:#ff9800;text-transform:uppercase;letter-spacing:1px' }, '\uD83D\uDDBC\uFE0F Mock Elections');
+    list.appendChild(sectionLabel);
+    mockElections.forEach(e => list.appendChild(renderElectionCard(e)));
+  }
+  loadBooths();
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function renderElectionTabs(electionId) {
+  const election = await api('/elections/' + electionId);
+  const detail = $('election-detail-' + electionId);
+  if (!detail) return;
+  detail.innerHTML = '';
+  const tabs = el('div', { className: 'tab-bar' },
+    el('button', { className: 'tab-btn active', dataset: {tab: 'positions'}, onClick: () => switchTab(electionId, 'positions') }, __('positions_candidates')),
+    el('button', { className: 'tab-btn', dataset: {tab: 'otps'}, onClick: () => switchTab(electionId, 'otps') }, __('otps')),
+    el('button', { className: 'tab-btn', dataset: {tab: 'results'}, onClick: () => switchTab(electionId, 'results') }, __('results'))
+  );
+  detail.appendChild(tabs);
+  const content = el('div', { className: 'tab-content', id: 'tab-content-' + electionId });
+  detail.appendChild(content);
+  renderPositionsTab(electionId, election);
+}
+
+function switchTab(electionId, tab) {
+  const detail = $('election-detail-' + electionId);
+  if (!detail) return;
+  detail.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  const content = $('tab-content-' + electionId);
+  if (!content) return;
+  if (tab === 'positions') {
+    api('/elections/' + electionId).then(e => renderPositionsTab(electionId, e));
+  } else if (tab === 'otps') {
+    renderOTPsTab(electionId);
+  } else if (tab === 'results') {
+    renderResultsTab(electionId);
+  }
+}
+
+function renderPositionsTab(electionId, election) {
+  const content = $('tab-content-' + electionId);
+  if (!content) return;
+  content.innerHTML = '';
+  const hdr = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px' },
+    el('h3', { style: 'margin:0;font-size:14px' }, __('positions_candidates')),
+    el('div', { style: 'display:flex;gap:6px' },
+      el('button', { className: 'btn btn-sm btn-primary', onClick: () => showNewPosition(electionId) }, __('add_position')),
+      el('button', { className: 'btn btn-sm', style: 'background:#e3f2fd;color:#1565c0', onClick: () => bulkUpload(electionId, 'photos') }, '\uD83D\uDCF7 ' + __('photos')),
+      el('button', { className: 'btn btn-sm', style: 'background:#f3e5f5;color:#7b1fa2', onClick: () => bulkUpload(electionId, 'symbols') }, '\uD83D\uDD16 ' + __('symbols')),
+      el('button', { className: 'btn btn-sm', style: 'background:#e8e8e8', onClick: () => printPositions(election) }, '\uD83D\uDDA8\uFE0F ' + __('print'))
+    )
+  );
+  content.appendChild(hdr);
+  if (!election.positions || election.positions.length === 0) {
+    content.appendChild(el('p', { style: 'color:#999;font-size:13px;padding:8px 0' }, __('no_positions')));
+    return;
+  }
+  election.positions.forEach(p => {
+    const posCard = el('div', { style: 'background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:8px' });
+    const posHdr = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px' },
+      el('div', {},
+        el('strong', { style: 'font-size:14px' }, esc(p.title)),
+        p.description ? el('span', { style: 'color:#888;font-size:12px;margin-left:6px' }, '(' + esc(p.description) + ')') : null
+      ),
+      el('div', { style: 'display:flex;gap:4px' },
+        el('button', { className: 'btn btn-sm btn-danger', onClick: async () => {
+          if (!confirm(__('confirm_delete'))) return;
+          await api('/positions/' + p.id, { method: 'DELETE' });
+          api('/elections/' + electionId).then(e => renderPositionsTab(electionId, e));
+        }}, __('delete')),
+        el('button', { className: 'btn btn-sm', style: 'background:#e8e8e8', onClick: () => showNewCandidate(p.id, electionId) }, __('add_candidate'))
+      )
+    );
+    posCard.appendChild(posHdr);
+    if (!p.candidates || p.candidates.length === 0) {
+      posCard.appendChild(el('p', { style: 'color:#999;font-size:12px;padding:4px 0' }, __('no_candidates')));
+    } else {
+      p.candidates.forEach(c => {
+        const isNota = c.is_nota;
+        const ci = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:' + (isNota ? '#fff3cd' : '#fff') + ';border:1px solid #eee;border-radius:6px;margin-bottom:3px' });
+        const nameDiv = el('div', { style: 'display:flex;align-items:center;gap:6px;flex:1;min-width:0' });
+        nameDiv.innerHTML =
+          (isNota ? '<span style="background:#ffc107;color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px">NOTA</span> ' : '') +
+          (c.serial ? '<span style="font-size:11px;font-weight:700;color:#888;min-width:22px;text-align:right">' + c.serial + '.</span> ' : '') +
+          (c.photo_url ? '<img src="' + c.photo_url + '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0">' : '') +
+          '<span style="font-size:13px;font-weight:600">' + esc(c.name) + '</span>' +
+          (c.name_kn ? '<span style="font-size:11px;color:#888;font-family:\'Anek Kannada\',sans-serif">' + esc(c.name_kn) + '</span>' : '') +
+          (c.class ? '<span style="font-size:11px;color:#888">(' + esc(fmtClass(c.class)) + ')</span>' : '');
+        ci.appendChild(nameDiv);
+        ci.appendChild(isNota
+          ? el('span', { style: 'font-size:10px;color:#856404' }, 'Default')
+          : el('button', { className: 'btn btn-sm btn-danger', style: 'padding:2px 8px;font-size:11px', onClick: async () => { if (!confirm(__('confirm_delete_candidate'))) return; await api('/candidates/' + c.id, { method: 'DELETE' }); api('/elections/' + electionId).then(e => renderPositionsTab(electionId, e)); } }, 'X')
+        );
+        posCard.appendChild(ci);
+      });
+    }
+    content.appendChild(posCard);
+  });
+}
+
+function printPositions(election) {
+  const SYM = { star:'\u2605',heart:'\u2764',diamond:'\u2666',circle:'\u25CF',square:'\u25A0',triangle:'\u25B2',flower:'\u273F',book:'\uD83D\uDCD6',hand:'\u270B',sun:'\u2600',moon:'\uD83C\uDF19',tree:'\uD83C\uDF33',car:'\uD83D\uDE97',flag:'\uD83C\uDFF3',lion:'\uD83E\uDD81' };
+  api('/admin/settings').then(settings => {
+    const schoolName = settings.school_name || '';
+    const schoolLogo = settings.school_logo_url || '';
+    const win = window.open('', '_blank', 'width=800,height=600');
+    win.document.write('<html><head><title>' + esc(election.title) + ' - Candidates</title>');
+    win.document.write('<style>');
+    win.document.write('@page { size: A4; margin: 20mm 15mm; }');
+    win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+    win.document.write('body { font-family: "Anek Kannada", Arial, sans-serif; color: #222; line-height: 1.5; }');
+    win.document.write('.school-header { text-align: center; padding-bottom: 6mm; margin-bottom: 6mm; border-bottom: 3px double #1a1a2e; }');
+    win.document.write('.school-header img { max-height: 60px; margin-bottom: 4px; }');
+    win.document.write('.school-header .school-name { font-size: 16pt; font-weight: 700; color: #1a1a2e; letter-spacing: 0.5px; }');
+    win.document.write('.doc-title { text-align: center; font-size: 14pt; font-weight: 600; color: #333; margin-bottom: 2mm; }');
+    win.document.write('.doc-subtitle { text-align: center; font-size: 10pt; color: #666; margin-bottom: 8mm; }');
+    win.document.write('h2 { font-size: 12pt; margin-top: 6mm; margin-bottom: 3mm; color: #1a1a2e; border-bottom: 2px solid #1a1a2e; padding-bottom: 1.5mm; page-break-after: avoid; }');
+    win.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }');
+    win.document.write('th { background: #1a1a2e; color: #fff; padding: 6px 8px; font-size: 10pt; text-align: left; font-weight: 600; }');
+    win.document.write('td { padding: 6px 8px; border-bottom: 1px solid #ddd; font-size: 10pt; vertical-align: middle; }');
+    win.document.write('tr:nth-child(even) td { background: #f8f9fa; }');
+    win.document.write('.cand-photo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; vertical-align: middle; }');
+    win.document.write('.cand-symbol { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }');
+    win.document.write('.serial-col { width: 40px; text-align: center; font-weight: 700; }');
+    win.document.write('.photo-col { width: 44px; text-align: center; }');
+    win.document.write('.symbol-col { width: 40px; text-align: center; }');
+    win.document.write('.footer { text-align: center; margin-top: 8mm; padding-top: 4mm; border-top: 1px solid #ddd; font-size: 8pt; color: #999; }');
+    win.document.write('.page-break { page-break-before: always; }');
+    win.document.write('</style></head><body>');
+    // School header
+    win.document.write('<div class="school-header">' +
+      (schoolLogo ? '<img src="' + esc(schoolLogo) + '" alt="School Logo">' : '') +
+      (schoolName ? '<div class="school-name">' + esc(schoolName) + '</div>' : '') +
+    '</div>');
+    win.document.write('<div class="doc-title">' + esc(election.title) + '</div>');
+    win.document.write('<div class="doc-subtitle">List of Positions & Candidates</div>');
+    (election.positions || []).forEach(p => {
+      const nonNota = (p.candidates || []).filter(c => !c.is_nota);
+      if (nonNota.length === 0) return;
+      win.document.write('<div style="page-break-inside:avoid">');
+      win.document.write('<h2>' + esc(p.title) + (p.description ? ' (' + esc(p.description) + ')' : '') + '</h2>');
+      win.document.write('<table><thead><tr><th class="serial-col">#</th><th class="photo-col"></th><th>Candidate Name</th><th>Class</th><th class="symbol-col">Symbol</th></tr></thead><tbody>');
+      nonNota.forEach(c => {
+        win.document.write('<tr>' +
+          '<td class="serial-col">' + (c.serial || '') + '</td>' +
+          '<td class="photo-col">' + (c.photo_url ? '<img src="' + c.photo_url + '" class="cand-photo" onerror="this.style.display=\'none\'">' : '') + '</td>' +
+          '<td><span style="font-weight:600">' + esc(c.name) + '</span>' + (c.name_kn ? '<br><span style="font-size:9pt;color:#666">' + esc(c.name_kn) + '</span>' : '') + '</td>' +
+          '<td>' + (c.class ? esc(fmtClass(c.class)) : '') + '</td>' +
+          '<td class="symbol-col" style="font-size:18px">' + (c.symbol_url ? '<img src="' + c.symbol_url + '" class="cand-symbol" onerror="this.style.display=\'none\'">' : (SYM[c.symbol] || c.symbol || '')) + '</td>' +
+        '</tr>');
+      });
+      win.document.write('</tbody></table>');
+      win.document.write('</div>');
+    });
+    const now = new Date();
+    win.document.write('<div class="footer">Generated by e-Vote System on ' + now.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) + '</div>');
+    win.document.write('</body></html>');
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 500);
+  });
+}
+
+function renderOTPsTab(electionId) {
+  const content = $('tab-content-' + electionId);
+  if (!content) return;
+  content.innerHTML = '<p style="color:#999">' + __('loading') + '...</p>';
+  Promise.all([
+    api('/elections/' + electionId),
+    api('/elections/' + electionId + '/otps'),
+    api('/elections/' + electionId + '/otps/unused')
+  ]).then(([election, all, unused]) => {
+    content.innerHTML = '';
+    const genCard = el('div', { style: 'background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:8px' },
+      el('h3', { style: 'font-size:14px;margin-bottom:8px' }, __('generate')),
+      el('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' },
+        el('label', { style: 'font-weight:600;font-size:13px' }, __('count')),
+        el('input', { id: 'otp-count-' + electionId, type: 'number', value: '30', min: '1', max: '500', style: 'width:70px;margin-bottom:0' }),
+        el('button', { className: 'btn btn-sm btn-success', onClick: async () => {
+          const count = parseInt($('otp-count-' + electionId).value) || 30;
+          await api('/elections/' + electionId + '/otps/generate', { method: 'POST', body: { count } });
+          renderOTPsTab(electionId);
+        }}, __('generate')),
+        el('button', { className: 'btn btn-sm btn-primary', onClick: () => printOTPsWindow(electionId, election.title) }, __('print_a4_slips'))
+      )
+    );
+    content.appendChild(genCard);
+    const infoCard = el('div', { style: 'background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:8px' },
+      el('h3', { style: 'font-size:14px;margin-bottom:6px' }, __('otp_summary')),
+      el('p', { style: 'color:#666;font-size:13px' },
+        __('total') + ': ' + all.length + ' | ' + __('unused') + ': ' + unused.length + ' | ' + __('used') + ': ' + (all.length - unused.length)
+      )
+    );
+    content.appendChild(infoCard);
+    if (unused.length > 0) {
+      const listCard = el('div', { style: 'background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:8px' },
+        el('h3', { style: 'font-size:14px;margin-bottom:6px' }, __('unused_otps'))
+      );
+      const grid = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px' });
+      unused.forEach(o => {
+        grid.appendChild(el('span', { style: 'padding:6px 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;font-family:monospace;font-size:14px;font-weight:700' }, o.otp));
+      });
+      listCard.appendChild(grid);
+      content.appendChild(listCard);
+    }
+    if (all.length > 0) {
+      const allCard = el('div', { style: 'background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:8px' },
+        el('h3', { style: 'font-size:14px;margin-bottom:6px' }, __('all_otps'))
+      );
+      const grid2 = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px' });
+      all.forEach(o => {
+        const used = o.is_used;
+        grid2.appendChild(el('span', { style: 'padding:6px 10px;background:' + (used ? '#f5f5f5' : '#e8f5e9') + ';border:1px solid ' + (used ? '#ddd' : '#a5d6a7') + ';border-radius:6px;font-family:monospace;font-size:12px;font-weight:700;' + (used ? 'color:#999;text-decoration:line-through' : '') }, o.otp + (used ? ' \u2713' : '')));
+      });
+      allCard.appendChild(grid2);
+      content.appendChild(allCard);
+    }
+  });
+}
+function printOTPsWindow(electionId, electionTitle) {
+  Promise.all([
+    api('/elections/' + electionId + '/otps/unused'),
+    api('/admin/settings')
+  ]).then(([otps, settings]) => {
+    if (otps.length === 0) { alert(__('no_unused_otps')); return; }
+    const schoolName = settings.school_name || '';
+    const schoolLogo = settings.school_logo_url || '';
+    const win = window.open('', '_blank', 'width=800,height=600');
+    win.document.write('<html><head><title>' + __('otps') + ' - ' + electionTitle + '</title>');
+    win.document.write('<style>');
+    win.document.write('@page { size: A4; margin: 12mm 10mm; }');
+    win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+    win.document.write('body { font-family: "Anek Kannada", Arial, sans-serif; }');
+    win.document.write('.page { display: flex; flex-wrap: wrap; align-content: flex-start; min-height: 277mm; padding: 3mm; page-break-after: always; }');
+    win.document.write('.slip { width: 50%; height: 64mm; padding: 3mm; }');
+    win.document.write('.slip-inner { border: 2px dashed #444; padding: 3mm 4mm; height: 100%; display: flex; flex-direction: column; justify-content: center; position: relative; }');
+    win.document.write('.slip-header { text-align: center; margin-bottom: 1mm; }');
+    win.document.write('.slip-header .school { font-size: 7pt; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }');
+    win.document.write('.slip-header .election-title { font-size: 8pt; color: #1a1a2e; font-weight: 700; }');
+    win.document.write('.slip .otp { font-size: 26pt; font-weight: 900; letter-spacing: 5px; font-family: monospace; text-align: center; margin: 2mm 0; color: #1a1a2e; }');
+    win.document.write('.slip .field { border-bottom: 1px solid #888; padding: 1.5mm 0; margin: 1mm 0; min-height: 6mm; font-size: 10pt; }');
+    win.document.write('.slip .field-label { font-size: 7pt; color: #777; text-transform: uppercase; letter-spacing: 0.3px; }');
+    win.document.write('.slip .footer-text { text-align: center; font-size: 6.5pt; color: #999; margin-top: 1mm; }');
+    win.document.write('.slip-cut { position: absolute; top: 50%; left: -4px; width: 8px; height: 8px; background: #fff; border: 2px solid #444; border-radius: 50%; transform: translateY(-50%); }');
+    win.document.write('.slip-cut-r { right: -4px; left: auto; }');
+    win.document.write('</style></head><body>');
+
+    let page = win.document.createElement('div');
+    page.className = 'page';
+
+    otps.forEach((o, i) => {
+      if (i > 0 && i % 8 === 0) { win.document.body.appendChild(page); page = win.document.createElement('div'); page.className = 'page'; }
+      const slip = win.document.createElement('div');
+      slip.className = 'slip';
+      const candidateFields = otps.length <= 8 ? '' : ''; // always show fields
+      slip.innerHTML = '<div class="slip-inner">' +
+        '<div class="slip-cut"></div><div class="slip-cut slip-cut-r"></div>' +
+        '<div class="slip-header">' +
+          (schoolName ? '<div class="school">' + esc(schoolName) + '</div>' : '') +
+          '<div class="election-title">' + esc(electionTitle) + '</div>' +
+        '</div>' +
+        '<div class="otp">' + o.otp + '</div>' +
+        '<div class="field-label">' + __('name') + '</div><div class="field"></div>' +
+        '<div class="footer-text">Present this slip at the polling booth</div>' +
+      '</div>';
+      page.appendChild(slip);
+    });
+    win.document.body.appendChild(page);
+    win.document.write('</body></html>');
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 500);
+  });
+}
+function renderResultsTab(electionId) {
+  const content = $('tab-content-' + electionId);
+  if (!content) return;
+  content.innerHTML = '<p style="color:#999">' + __('loading') + '...</p>';
+  if (resultsWs) try { resultsWs.close(); } catch(e) {}
+  resultsElectionId = electionId;
+  connectResultsWs();
+  refreshResultsInline(electionId, content);
+}
+
+function printResultsWindow(electionId) {
+  Promise.all([
+    api('/pro/election/' + electionId + '/progress'),
+    api('/admin/settings')
+  ]).then(([data, settings]) => {
+    const schoolName = settings.school_name || '';
+    const schoolLogo = settings.school_logo_url || '';
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write('<html><head><title>' + __('results') + ' - ' + data.election.title + '</title>');
+    win.document.write('<style>');
+    win.document.write('@page { size: A4; margin: 20mm 15mm; }');
+    win.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+    win.document.write('body { font-family: "Anek Kannada", Arial, sans-serif; color: #1a1a2e; padding: 20px; }');
+    win.document.write('.school-header { text-align: center; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 3px double #1a1a2e; }');
+    win.document.write('.school-header img { max-height: 50px; margin-bottom: 4px; }');
+    win.document.write('.school-header .school-name { font-size: 14pt; font-weight: 700; }');
+    win.document.write('.election-title { font-size: 16pt; font-weight: 700; margin-bottom: 8px; }');
+    win.document.write('.progress-bar { height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; margin: 10px 0; }');
+    win.document.write('.progress-fill { height: 100%; background: #0f9b0f; }');
+    win.document.write('.stats { display: flex; gap: 12px; margin: 12px 0; }');
+    win.document.write('.stat-card { flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; text-align: center; }');
+    win.document.write('.stat-card .num { font-size: 28px; font-weight: 800; }');
+    win.document.write('.stat-card .label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }');
+    win.document.write('.position-section { margin: 14px 0; page-break-inside: avoid; }');
+    win.document.write('.position-title { font-size: 13pt; font-weight: 700; margin-bottom: 6px; border-bottom: 2px solid #1a1a2e; padding-bottom: 1.5mm; page-break-after: avoid; }');
+    win.document.write('.cand-row { display: flex; align-items: center; padding: 6px 10px; border-bottom: 1px solid #ddd; margin-bottom: 0; gap: 8px; }');
+    win.document.write('.cand-row.nota { background: #fff3cd; border-top: 1px solid #ddd; }');
+    win.document.write('.cand-row .symbol { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }');
+    win.document.write('.cand-row .serial { font-size: 11px; font-weight: 700; color: #888; min-width: 20px; }');
+    win.document.write('.cand-row .name { flex: 1; font-size: 11pt; font-weight: 600; }');
+    win.document.write('.cand-row .name .kn { font-size: 10pt; color: #888; font-weight: 400; }');
+    win.document.write('.cand-row .bar { flex: 1; height: 8px; background: #e9ecef; border-radius: 4px; max-width: 200px; }');
+    win.document.write('.cand-row .bar-fill { height: 100%; background: #1a1a2e; border-radius: 4px; }');
+    win.document.write('.cand-row .bar-fill.nota { background: #ff9800; }');
+    win.document.write('.cand-row .count { font-size: 14pt; font-weight: 700; min-width: 30px; text-align: right; }');
+    win.document.write('.nota-badge { display: inline-block; background: #ffc107; color: #000; font-size: 8pt; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-right: 6px; }');
+    win.document.write('.class-tag { font-weight: 400; color: #666; }');
+    win.document.write('</style></head><body>');
+
+    const SYM = { star:'\u2605',heart:'\u2764',diamond:'\u2666',circle:'\u25CF',square:'\u25A0',triangle:'\u25B2',flower:'\u273F',book:'\uD83D\uDCD6',hand:'\u270B',sun:'\u2600',moon:'\uD83C\uDF19',tree:'\uD83C\uDF33',car:'\uD83D\uDE97',flag:'\uD83C\uDFF3',lion:'\uD83E\uDD81' };
+
+    // School header
+    if (schoolName || schoolLogo) {
+      var hdr = '<div class="school-header">';
+      if (schoolLogo) hdr += '<img src="' + esc(schoolLogo) + '">';
+      if (schoolName) hdr += '<div class="school-name">' + esc(schoolName) + '</div>';
+      hdr += '</div>';
+      win.document.write(hdr);
+    }
+
+    win.document.write('<div class="election-title">' + esc(data.election.title) + ' &mdash; ' + __('results') + '</div>');
+    var pct = data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0';
+    win.document.write('<div class="stats"><div class="stat-card"><div class="num">' + data.progress.voted + '</div><div class="label">' + __('votes_cast') + '</div></div><div class="stat-card"><div class="num">' + data.progress.total + '</div><div class="label">' + __('total_voters') + '</div></div><div class="stat-card"><div class="num">' + pct + '%</div><div class="label">' + __('turnout') + '</div></div></div>');
+
+    if (data.positions && data.positions.length > 0) {
+      data.positions.forEach(function(pos) {
+        var posCandidates = (data.voteCounts || []).filter(function(v) { return v.position_title === pos.title; });
+        posCandidates.sort(function(a, b) { if (a.is_nota) return 1; if (b.is_nota) return -1; return b.vote_count - a.vote_count; });
+        var maxVotes = Math.max.apply(null, posCandidates.map(function(v) { return v.vote_count; }), 1);
+        var sec = '<div class="position-section"><div class="position-title">' + esc(pos.title) + '</div>';
+        posCandidates.forEach(function(cand) {
+          var isNota = cand.is_nota;
+          var pct2 = maxVotes > 0 ? Math.round(cand.vote_count / maxVotes * 100) : 0;
+          var symHtml = cand.symbol_url ? '<img src="' + esc(cand.symbol_url) + '" class="symbol">' : '<span style="font-size:16px;flex-shrink:0">' + (SYM[cand.symbol] || '') + '</span>';
+          var notaBadge = isNota ? '<span class="nota-badge">NOTA</span> ' : '';
+          var serialHtml = cand.serial ? '<span class="serial">' + cand.serial + '.</span>' : '';
+          sec += '<div class="cand-row' + (isNota ? ' nota' : '') + '">' +
+            serialHtml + '<div class="name">' + notaBadge + esc(cand.name) +
+            (cand.name_kn ? ' <span class="kn">' + esc(cand.name_kn) + '</span>' : '') +
+            ' <span class="class-tag">' + fmtClass(cand.class) + '</span></div>' +
+            symHtml +
+            '<div class="bar"><div class="bar-fill' + (isNota ? ' nota' : '') + '" style="width:' + pct2 + '%"></div></div>' +
+            '<div class="count">' + cand.vote_count + '</div></div>';
+        });
+        sec += '</div>';
+        win.document.write(sec);
+      });
+    }
+
+    win.document.write('</body></html>');
+    win.document.close();
+    setTimeout(function() { win.focus(); win.print(); }, 500);
+  });
+}
+
+async function refreshResultsInline(id, content) {
+  try {
+    const data = await api('/pro/election/' + id + '/progress');
+    content.innerHTML =
+      '<div style="margin-bottom:12px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<h3 style="margin:0;font-size:14px">' + __('results') + '</h3>' +
+          '<button class="btn btn-sm btn-primary" onclick="printResultsWindow(' + id + ')">\uD83D\uDDA8\uFE0F ' + __('print') + '</button>' +
+        '</div>' +
+        '<div style="display:flex;height:20px;background:#e9ecef;border-radius:10px;overflow:hidden;margin:10px 0">' +
+          '<div style="background:#0f9b0f;height:100%;width:' + (data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0') + '%;transition:width 0.5s"></div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">' +
+          '<div style="background:#f0f0f0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:28px;font-weight:800;color:#1a1a2e">' + data.progress.voted + '</div><div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.5px">' + __('votes_cast') + '</div></div>' +
+          '<div style="background:#f0f0f0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:28px;font-weight:800;color:#1a1a2e">' + data.progress.total + '</div><div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.5px">' + __('total_voters') + '</div></div>' +
+          '<div style="background:#f0f0f0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:28px;font-weight:800;color:#1a1a2e">' + (data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0') + '%</div><div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.5px">' + __('turnout') + '</div></div>' +
+        '</div>' +
+      '</div>';
+    if (data.positions && data.positions.length > 0) {
+      data.positions.forEach(pos => {
+        const posDiv = el('div', { style: 'margin-bottom:12px' });
+        posDiv.appendChild(el('h4', { style: 'font-size:13px;margin-bottom:6px;color:#333' }, esc(pos.title)));
+        const posCandidates = (data.voteCounts || []).filter(v => v.position_title === pos.title);
+        posCandidates.sort((a, b) => { if (a.is_nota) return 1; if (b.is_nota) return -1; return b.vote_count - a.vote_count; });
+        const maxVotes = Math.max(...posCandidates.map(v => v.vote_count), 1);
+        posCandidates.forEach(cand => {
+          const isNota = cand.is_nota;
+          const pct = maxVotes > 0 ? Math.round(cand.vote_count / maxVotes * 100) : 0;
+          const SYM3 = { star:'\u2605',heart:'\u2764',diamond:'\u2666',circle:'\u25CF',square:'\u25A0',triangle:'\u25B2',flower:'\u273F',book:'\uD83D\uDCD6',hand:'\u270B',sun:'\u2600',moon:'\uD83C\uDF19',tree:'\uD83C\uDF33',car:'\uD83D\uDE97',flag:'\uD83C\uDFF3',lion:'\uD83E\uDD81' };
+          const row = el('div', { style: 'display:flex;align-items:center;padding:5px 8px;background:' + (isNota ? '#fff3cd' : '#f8f9fa') + ';border-radius:6px;margin-bottom:3px;gap:8px' });
+          row.innerHTML =
+            (cand.serial ? '<span style="font-size:11px;font-weight:700;color:#888;min-width:18px">' + cand.serial + '.</span>' : '') +
+            '<div style="flex:1;font-size:12px;font-weight:600">' + esc(cand.name) + (cand.name_kn ? ' <span style="font-weight:400;color:#888;font-family:\'Anek Kannada\',sans-serif">' + esc(cand.name_kn) + '</span>' : '') + '</div>' +
+            (cand.symbol_url ? '<img src="' + cand.symbol_url + '" style="width:18px;height:18px;object-fit:contain;flex-shrink:0">' : '<span style="font-size:14px;flex-shrink:0">' + (SYM3[cand.symbol] || '') + '</span>') +
+            '<div style="flex:1;height:6px;background:#e9ecef;border-radius:3px;max-width:150px"><div style="height:100%;background:' + (isNota ? '#ff9800' : '#1a1a2e') + ';border-radius:3px;width:' + pct + '%"></div></div>' +
+            '<div style="font-size:16px;font-weight:700;color:#1a1a2e;min-width:30px;text-align:right">' + cand.vote_count + '</div>';
+          posDiv.appendChild(row);
+        });
+        content.appendChild(posDiv);
+      });
+    }
+  } catch (e) {
+    content.innerHTML = '<p style="color:#999">' + __('loading') + '...</p>';
+  }
+}
+
+function showNewElectionForm() {
+  const c = el('div', {},
+    el('h2', {}, __('new_election_title')),
+    el('div', { className: 'form-group' }, el('label', {}, __('title')), el('input', { id: 'e-title', placeholder: __('e_title_placeholder') })),
+    el('div', { className: 'form-group' }, el('label', {}, __('description')), el('textarea', { id: 'e-desc', placeholder: __('e_desc_placeholder') })),
+    el('div', { className: 'modal-actions' },
+      el('button', { className: 'btn', onClick: closeModal }, __('cancel')),
+      el('button', { className: 'btn btn-primary', onClick: async () => {
+        const title = $('e-title').value;
+        if (!title) return alert(__('title_required'));
+        await api('/elections', { method: 'POST', body: { title, description: $('e-desc').value } });
+        closeModal(); loadElections();
+      }}, __('create'))
+    )
+  );
+  showModal(c);
+  setTimeout(() => $('e-title').focus(), 100);
+}
+
+function editElection(e) {
+  const c = el('div', {},
+    el('h2', {}, __('edit_election')),
+    el('div', { className: 'form-group' }, el('label', {}, __('title')), el('input', { id: 'e-title', value: e.title })),
+    el('div', { className: 'form-group' }, el('label', {}, __('description')), el('textarea', { id: 'e-desc' }, e.description)),
+    el('div', { className: 'form-group' }, el('label', {}, __('total_voters')), el('input', { id: 'e-total-voters', type: 'number', min: '0', value: e.total_voters || 0, placeholder: '0 = auto count' })),
+    el('div', { className: 'modal-actions' },
+      el('button', { className: 'btn', onClick: closeModal }, __('cancel')),
+      el('button', { className: 'btn btn-primary', onClick: async () => {
+        await api('/elections/' + e.id, { method: 'PUT', body: { title: $('e-title').value, description: $('e-desc').value, total_voters: parseInt($('e-total-voters').value) || 0 } });
+        closeModal(); loadElections();
+      }}, __('save'))
+    )
+  );
+  showModal(c);
+}
+
+async function activateElection(id) {
+  await api('/elections/' + id + '/activate', { method: 'POST' });
+  loadElections();
+}
+
+async function toggleElectionActive(id, checked) {
+  if (checked) {
+    await api('/elections/' + id + '/activate', { method: 'POST' });
+  } else {
+    await api('/elections/' + id + '/deactivate', { method: 'POST' });
+  }
+  loadElections();
+}
+
+async function closeElection(id) {
+  if (!confirm(__('confirm_close'))) return;
+  await api('/elections/' + id + '/close', { method: 'POST' });
+  loadElections();
+}
+
+async function resetElectionVotes(id) {
+  if (!confirm(__('confirm_reset_votes'))) return;
+  await api('/elections/' + id + '/reset-votes', { method: 'POST' });
+  loadElections();
+}
+
+async function generateMockElection() {
+  if (!confirm(__('confirm_mock'))) return;
+  await api('/elections/mock', { method: 'POST' });
+  loadElections();
+}
+
+async function deleteElection(id) {
+  if (!confirm(__('confirm_delete'))) return;
+  await api('/elections/' + id, { method: 'DELETE' });
+  loadElections();
+}
+
+// --- OTPs ---
+
+// Helper to refresh positions tab after modal create/edit
+function refreshPositionsTab(electionId) {
+  closeModal();
+  api('/elections/' + electionId).then(e => {
+    const content = $('tab-content-' + electionId);
+    if (content) renderPositionsTab(electionId, e);
+  });
+}
+
+function showNewPosition(electionId) {
+  const c = el('div', {},
+    el('h2', {}, __('new_position')),
+    el('div', { className: 'form-group' }, el('label', {}, __('title')), el('input', { id: 'p-title', placeholder: __('p_title_placeholder') })),
+    el('div', { className: 'form-group' }, el('label', {}, __('description')), el('input', { id: 'p-desc', placeholder: __('p_desc_placeholder') })),
+    el('div', { className: 'form-group' }, el('label', {}, __('sort_order')), el('input', { id: 'p-order', type: 'number', value: '0' })),
+    el('div', { className: 'modal-actions' },
+      el('button', { className: 'btn', onClick: closeModal }, __('cancel')),
+      el('button', { className: 'btn btn-primary', onClick: async () => {
+        const title = $('p-title').value;
+        if (!title) return alert(__('title_required'));
+        await api('/elections/' + electionId + '/positions', { method: 'POST', body: { title, description: $('p-desc').value, sort_order: parseInt($('p-order').value) || 0 } });
+        refreshPositionsTab(electionId);
+      }}, __('create'))
+    )
+  );
+  showModal(c);
+  setTimeout(() => $('p-title').focus(), 100);
+}
+function showNewCandidate(positionId, electionId) {
+  const c = el('div', {},
+    el('h2', {}, __('new_candidate')),
+    el('div', { className: 'form-group' }, el('label', {}, __('name')), el('input', { id: 'c-name', placeholder: __('c_name_placeholder') })),
+    el('div', { className: 'form-group' }, el('label', {}, 'ಕನ್ನಡ ಹೆಸರು'), el('input', { id: 'c-name-kn', placeholder: 'ಅಭ್ಯರ್ಥಿಯ ಹೆಸರು (ಕನ್ನಡದಲ್ಲಿ)' })),
+    el('div', { className: 'form-group' }, el('label', {}, __('serial')), el('input', { id: 'c-serial', type: 'number', placeholder: __('serial_placeholder') })),
+    el('div', { className: 'form-group' }, el('label', {}, __('party')), el('input', { id: 'c-class', placeholder: __('c_party_placeholder') })),
+    el('div', { className: 'form-group' },
+      el('label', {}, __('photo')),
+      el('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' },
+        el('input', { id: 'c-photo', placeholder: __('c_photo_placeholder'), style: 'flex:1;min-width:120px;margin-bottom:0' }),
+        el('button', { className: 'btn btn-sm', onClick: () => { const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const fd=new FormData();fd.append('image',f);fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{$('c-photo').value=d.url;const t=$('c-photo-thumb');t.src=d.url;t.style.display='inline-block';}).catch(()=>alert('Upload failed'));};i.click();} }, __('browse')),
+        el('button', { className: 'btn btn-sm btn-primary', onClick: () => showCropModal($('c-photo'), $('c-photo').value) }, __('crop_upload'))
+      ),
+      el('img', { id: 'c-photo-thumb', style: 'display:none;width:48px;height:48px;border-radius:8px;object-fit:cover;margin-top:6px' })
+    ),
+    el('div', { className: 'form-group' },
+      el('label', {}, __('symbol')),
+      el('div', { style: 'display:flex;gap:8px;margin-bottom:6px' },
+        el('select', { id: 'c-symbol', style: 'flex:1;margin-bottom:0' },
+          el('option', { value: '' }, '-- None / Upload custom --'),
+          el('option', { value: 'star' }, 'Star'), el('option', { value: 'heart' }, 'Heart'), el('option', { value: 'diamond' }, 'Diamond'),
+          el('option', { value: 'circle' }, 'Circle'), el('option', { value: 'square' }, 'Square'), el('option', { value: 'triangle' }, 'Triangle'),
+          el('option', { value: 'flower' }, 'Flower'), el('option', { value: 'book' }, 'Book'), el('option', { value: 'hand' }, 'Hand'),
+          el('option', { value: 'sun' }, 'Sun'), el('option', { value: 'moon' }, 'Moon'), el('option', { value: 'tree' }, 'Tree'),
+          el('option', { value: 'car' }, 'Car'), el('option', { value: 'flag' }, 'Flag'), el('option', { value: 'lion' }, 'Lion')
+        ),
+        el('button', { className: 'btn btn-sm btn-primary', onClick: () => showCropModal($('c-symbol-url'), '') }, __('upload_symbol'))
+      ),
+      el('div', { style: 'display:flex;gap:8px;align-items:center' },
+        el('input', { id: 'c-symbol-url', placeholder: 'Or paste symbol image URL', style: 'flex:1;margin-bottom:0' }),
+        el('button', { className: 'btn btn-sm', onClick: () => { const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const fd=new FormData();fd.append('image',f);fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{$('c-symbol-url').value=d.url;const t=$('c-symbol-url-thumb');t.src=d.url;t.style.display='inline-block';}).catch(()=>alert('Upload failed'));};i.click();} }, __('browse'))
+      ),
+      el('img', { id: 'c-symbol-url-thumb', style: 'display:none;width:32px;height:32px;object-fit:contain;margin-top:6px' })
+    ),
+    el('div', { className: 'modal-actions' },
+      el('button', { className: 'btn', onClick: closeModal }, __('cancel')),
+      el('button', { className: 'btn btn-primary', onClick: async () => {
+        const name = $('c-name').value;
+        if (!name) return alert(__('name_required'));
+        const photoUrl = $('c-photo')._uploadedUrl || $('c-photo').value;
+        const symbolUrl = $('c-symbol-url')._uploadedUrl || $('c-symbol-url').value;
+        const symbol = $('c-symbol').value || 'star';
+        const nameKn = $('c-name-kn') ? $('c-name-kn').value : '';
+        const serial = parseInt($('c-serial').value) || 0;
+        await api('/positions/' + positionId + '/candidates', { method: 'POST', body: { name, name_kn: nameKn, class: $('c-class').value, photo_url: photoUrl, symbol, symbol_url: symbolUrl, serial } });
+        closeModal(); refreshPositionsTab(electionId);
+      }}, __('create'))
+    )
+  );
+  showModal(c);
+  setTimeout(() => $('c-name').focus(), 100);
+}
+
+function bulkUpload(electionId, type) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = async () => {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+    const formData = new FormData();
+    files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    files.forEach(f => formData.append('files', f));
+    const endpoint = '/api/elections/' + electionId + '/' + type + '/bulk';
+    const result = await api(endpoint, { method: 'POST', body: formData });
+    alert('Uploaded ' + result.updated + ' ' + type + ' successfully');
+    api('/elections/' + electionId).then(e => renderPositionsTab(electionId, e));
+  };
+  input.click();
+}
+
+// --- Booths ---
+
+async function loadBooths() {
+  const booths = await api('/booths');
+  const section = $('booth-section');
+  section.innerHTML = '';
+  section.appendChild(el('div', { className: 'card', id: 'booths' },
+    el('h2', {}, __('booths')),
+    el('p', { style: 'color:#666;font-size:13px;margin-bottom:16px' }, __('booth_create_desc'))
+  ));
+  const boothList = $('booths');
+  if (booths.length === 0) {
+    boothList.appendChild(el('p', { style: 'color:#999;padding:8px 0' }, __('no_booths')));
+  } else {
+    const table = el('table', { style: 'width:100%;border-collapse:collapse' });
+    table.innerHTML = '<thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_code') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_name') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('voter_url') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('pro_url') + '</th><th style="padding:8px;border-bottom:2px solid #eee">' + __('action') + '</th></tr></thead>';
+    const tbody = el('tbody');
+    booths.forEach(b => {
+      const tr = el('tr', {},
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-weight:700;font-family:monospace' }, b.code),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee' }, b.name),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-size:12px' }, el('code', { style: 'background:#eee;padding:2px 4px;border-radius:3px' }, '/voter?booth=' + b.code)),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-size:12px' }, el('code', { style: 'background:#eee;padding:2px 4px;border-radius:3px' }, '/pro?booth=' + b.code)),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee' },
+          el('button', { className: 'btn btn-sm btn-danger', onClick: async () => { if (!confirm(__('confirm_delete_booth'))) return; await api('/booths/' + b.id, { method: 'DELETE' }); loadBooths(); } }, __('delete'))
+        )
+      );
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    boothList.appendChild(table);
+  }
+  const addForm = el('div', { style: 'display:flex;gap:8px;align-items:end;margin-top:12px;flex-wrap:wrap' },
+    el('div', { style: 'flex:1;min-width:150px' },
+      el('label', { style: 'display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px' }, __('booth_name')),
+      el('input', { id: 'b-name', placeholder: __('b_name_placeholder'), style: 'margin-bottom:0' })
+    ),
+    el('button', { className: 'btn btn-success', onClick: async () => {
+      const name = $('b-name').value.trim();
+      if (!name) return alert(__('enter_booth_name'));
+      const booth = await api('/booths', { method: 'POST', body: { name } });
+      alert(__('create_booth_success') + booth.code);
+      $('b-name').value = '';
+      loadBooths();
+    }}, __('create_booth'))
+  );
+  boothList.appendChild(addForm);
+}
+
+async function loadBindings() {
+  const bindings = await api('/admin/bindings');
+  const section = $('binding-section');
+  section.innerHTML = '';
+  const card = el('div', { className: 'card' },
+    el('h2', {}, __('ip_bindings')),
+    el('p', { style: 'color:#666;font-size:13px;margin-bottom:12px' }, __('binding_desc'))
+  );
+  if (!bindings || bindings.length === 0) {
+    card.appendChild(el('p', { style: 'color:#999' }, __('no_bindings')));
+  } else {
+    const table = el('table', { style: 'width:100%;border-collapse:collapse' });
+    table.innerHTML = '<thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('ip_address') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_code') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('binding_type') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('binding_created') + '</th><th style="padding:8px;border-bottom:2px solid #eee">' + __('action') + '</th></tr></thead>';
+    const tbody = el('tbody');
+    bindings.forEach(b => {
+      tbody.appendChild(el('tr', {},
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-size:13px' }, b.ip_address),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-weight:700;font-family:monospace' }, b.booth_code),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee' }, b.type),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888' }, b.created_at),
+        el('td', { style: 'padding:8px;border-bottom:1px solid #eee' },
+          el('button', { className: 'btn btn-sm btn-danger', onClick: async () => { if (!confirm(__('confirm_unbind'))) return; await api('/admin/binding/' + encodeURIComponent(b.ip_address), { method: 'DELETE' }); loadBindings(); } }, __('unbind'))
+        )
+      ));
+    });
+    table.appendChild(tbody);
+    card.appendChild(table);
+  }
+  // Binding creation form
+  const createCard = el('div', { className: 'card', style: 'margin-top:12px' },
+    el('h3', {}, __('new_binding')),
+    el('div', { style: 'display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:8px' },
+      el('div', { style: 'flex:1;min-width:150px' },
+        el('label', { style: 'display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px' }, __('ip_address')),
+        el('input', { id: 'b-ip', placeholder: 'e.g., 192.168.1.100', style: 'margin-bottom:0' })
+      ),
+      el('div', { style: 'flex:1;min-width:120px' },
+        el('label', { style: 'display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px' }, __('booth_code')),
+        el('input', { id: 'b-code', placeholder: 'e.g., SCHOOL', style: 'font-family:monospace;text-transform:uppercase;margin-bottom:0' })
+      ),
+      el('div', { style: 'flex:0;min-width:80px' },
+        el('label', { style: 'display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px' }, __('binding_type')),
+        el('select', { id: 'b-type', style: 'margin-bottom:0' },
+          el('option', { value: 'voter' }, 'Voter'),
+          el('option', { value: 'pro' }, 'Pro')
+        )
+      ),
+      el('button', { className: 'btn btn-success', onClick: async () => {
+        const ip = $('b-ip').value.trim();
+        const code = $('b-code').value.trim().toUpperCase();
+        const type = $('b-type').value;
+        if (!ip || !code) return alert('IP and booth code required');
+        await api('/admin/bindings', { method: 'POST', body: { ip, boothCode: code, type } });
+        $('b-ip').value = '';
+        $('b-code').value = '';
+        loadBindings();
+      }}, __('create'))
+    )
+  );
+  section.appendChild(createCard);
+}
+
+// --- EVM & Booth Device Management ---
+
+function makePendingTable(items, idField, titleField, numPrefix, approveUrl, rejectUrl) {
+  const table = el('table', { style: 'width:100%;border-collapse:collapse;margin-bottom:8px' });
+  table.innerHTML = '<thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('device') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_code') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_name') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('ip_address') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('binding_created') + '</th><th style="padding:8px;border-bottom:2px solid #eee">' + __('action') + '</th></tr></thead>';
+  const tbody = el('tbody');
+  items.forEach(item => {
+    const id = item[idField];
+    tbody.appendChild(el('tr', {},
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-weight:700' }, numPrefix + (item.evm_number || id)),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-weight:700' }, item.booth_code),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee' }, item.booth_name || ''),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-size:13px' }, item.ip_address),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-size:12px;color:#888' }, item.created_at),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;display:flex;gap:6px' },
+        el('button', { className: 'btn btn-sm btn-success', onClick: async () => { await api(approveUrl + id + '/approve', { method: 'POST' }); loadPendingEvms(); } }, __('approve')),
+        el('button', { className: 'btn btn-sm btn-danger', onClick: async () => { if (!confirm(__('confirm_reject_device'))) return; await api(rejectUrl + id, { method: 'DELETE' }); loadPendingEvms(); } }, __('reject'))
+      )
+    ));
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function makeDeviceTable(items, prefix) {
+  const table = el('table', { style: 'width:100%;border-collapse:collapse;margin-bottom:8px' });
+  table.innerHTML = '<thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('device') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_code') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('booth_name') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('ip_address') + '</th><th style="text-align:left;padding:8px;border-bottom:2px solid #eee">' + __('status') + '</th></tr></thead>';
+  const tbody = el('tbody');
+  items.forEach(item => {
+    tbody.appendChild(el('tr', {},
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-weight:700' }, prefix + ' #' + (item.evm_number || item.id)),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-weight:700' }, item.booth_code),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee' }, item.booth_name || ''),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-size:13px' }, item.ip_address),
+      el('td', { style: 'padding:8px;border-bottom:1px solid #eee' },
+        el('span', { className: 'badge badge-' + (item.status === 'ready' ? 'active' : item.status === 'voting' ? 'closed' : 'active'), style: 'font-size:11px' }, item.status)
+      )
+    ));
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+async function loadPendingEvms() {
+  const section = $('evm-section');
+  section.innerHTML = '';
+
+  // Booth Devices section
+  const boothCard = el('div', { className: 'card' },
+    el('h2', {}, __('booth_devices')),
+    el('p', { style: 'color:#666;font-size:13px;margin-bottom:12px' }, __('pending_booth_desc'))
+  );
+  try {
+    const [boothDevices, allBoothDevices] = await Promise.all([
+      api('/admin/booth-devices/pending'),
+      api('/admin/booth-devices/all')
+    ]);
+    if (boothDevices.length > 0) {
+      boothCard.appendChild(el('h3', { style: 'font-size:14px;margin-bottom:8px;color:#e65100' }, __('pending')));
+      boothCard.appendChild(makePendingTable(boothDevices, 'id', 'booth_name', '', '/admin/booth-devices/', '/admin/booth-devices/'));
+    }
+    if (allBoothDevices.length > 0) {
+      boothCard.appendChild(el('h3', { style: 'font-size:14px;margin:12px 0 8px;color:#2e7d32' }, __('approved')));
+      boothCard.appendChild(makeDeviceTable(allBoothDevices, 'Booth'));
+    }
+    if (boothDevices.length === 0 && allBoothDevices.length === 0) {
+      boothCard.appendChild(el('p', { style: 'color:#999;margin-bottom:12px' }, __('no_pending_booth_devices')));
+    }
+  } catch (e) {}
+  section.appendChild(boothCard);
+
+  // EVMs section
+  const evmCard = el('div', { className: 'card' },
+    el('h2', {}, __('evms')),
+    el('p', { style: 'color:#666;font-size:13px;margin-bottom:12px' }, __('pending_evms_desc'))
+  );
+  try {
+    const [evms, allEvms] = await Promise.all([
+      api('/admin/evms/pending'),
+      api('/admin/evms/all')
+    ]);
+    if (evms.length > 0) {
+      evmCard.appendChild(el('h3', { style: 'font-size:14px;margin-bottom:8px;color:#e65100' }, __('pending')));
+      evmCard.appendChild(makePendingTable(evms, 'id', 'booth_name', 'EVM #', '/admin/evms/', '/admin/evms/'));
+    }
+    if (allEvms.length > 0) {
+      evmCard.appendChild(el('h3', { style: 'font-size:14px;margin:12px 0 8px;color:#2e7d32' }, __('approved')));
+      evmCard.appendChild(makeDeviceTable(allEvms, 'EVM'));
+    }
+    if (evms.length === 0 && allEvms.length === 0) {
+      evmCard.appendChild(el('p', { style: 'color:#999' }, __('no_pending_evms')));
+    }
+  } catch (e) {}
+  section.appendChild(evmCard);
+}
+
+let resultsWs = null;
+let resultsElectionId = null;
+
+function connectResultsWs() {
+  if (resultsWs) try { resultsWs.close(); } catch(e) {}
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  resultsWs = new WebSocket(proto + '//' + location.host);
+  resultsWs.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if ((data.type === 'vote_cast' || data.type === 'voter_done' || data.type === 'election_status') && resultsElectionId) {
+        refreshResults(resultsElectionId);
+      }
+    } catch(e) {}
+  };
+  resultsWs.onclose = () => { if (resultsElectionId) setTimeout(connectResultsWs, 2000); };
+}
+
+async function showResults(electionId) {
+  resultsElectionId = electionId;
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  const rv = $('results-view');
+  rv.style.display = 'block';
+  connectResultsWs();
+  await refreshResults(electionId);
+}
+
+async function refreshResults(id) {
+  const [data, settings] = await Promise.all([
+    api('/pro/election/' + id + '/progress'),
+    api('/admin/settings')
+  ]);
+  const schoolName = settings.school_name || '';
+  const schoolLogo = settings.school_logo_url || '';
+  const rv = $('results-view');
+  rv.innerHTML = '<div class="card results-print">' +
+    // School header for print
+    (schoolName || schoolLogo ? '<div style="text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:3px double #1a1a2e">' +
+      (schoolLogo ? '<img src="' + esc(schoolLogo) + '" style="max-height:50px;margin-bottom:4px">' : '') +
+      (schoolName ? '<div style="font-size:14pt;font-weight:700;color:#1a1a2e">' + esc(schoolName) + '</div>' : '') +
+    '</div>' : '') +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+      '<h2>' + data.election.title + ' - ' + __('results') + '</h2>' +
+      '<span class="badge badge-' + data.election.status + '">' + data.election.status + '</span>' +
+    '</div>' +
+    '<div class="results-progress-bar"><div class="results-progress-fill" style="width:' + (data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0') + '%"></div></div>' +
+    '<div class="results-stat-grid">' +
+      '<div class="results-stat-card"><div class="num">' + data.progress.voted + '</div><div class="label">' + __('votes_cast') + '</div></div>' +
+      '<div class="results-stat-card"><div class="num">' + data.progress.total + '</div><div class="label">' + __('total_voters') + '</div></div>' +
+      '<div class="results-stat-card"><div class="num">' + (data.progress.total > 0 ? (data.progress.voted / data.progress.total * 100).toFixed(1) : '0.0') + '%</div><div class="label">' + __('turnout') + '</div></div>' +
+    '</div>';
+
+  if (data.positions.length > 0) {
+    data.positions.forEach(pos => {
+      const section = el('div', { className: 'position-results' });
+      section.appendChild(el('h3', {}, pos.title));
+      const posCandidates = data.voteCounts.filter(v => v.position_title === pos.title);
+      posCandidates.sort((a, b) => { if (a.is_nota) return 1; if (b.is_nota) return -1; return b.vote_count - a.vote_count; });
+      const maxVotes = Math.max(...posCandidates.map(v => v.vote_count), 1);
+      posCandidates.forEach(cand => {
+        const isNota = cand.is_nota;
+        const row = el('div', { className: 'candidate-result', style: isNota ? 'background:#fff3cd' : '' });
+        const pct2 = maxVotes > 0 ? Math.round(cand.vote_count / maxVotes * 100) : 0;
+        const SYM2 = { star:'\u2605',heart:'\u2764',diamond:'\u2666',circle:'\u25CF',square:'\u25A0',triangle:'\u25B2',flower:'\u273F',book:'\uD83D\uDCD6',hand:'\u270B',sun:'\u2600',moon:'\uD83C\uDF19',tree:'\uD83C\uDF33',car:'\uD83D\uDE97',flag:'\uD83C\uDFF3',lion:'\uD83E\uDD81' };
+        row.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex:1">' +
+          (cand.serial ? '<span style="font-size:12px;font-weight:700;color:#888;min-width:20px">' + cand.serial + '.</span>' : '') +
+          '<div class="name">' +
+          (isNota ? '<span style="display:inline-block;background:#ffc107;color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;margin-right:6px">NOTA</span> ' : '') +
+          cand.name + (cand.name_kn ? '<br><span style="font-size:12px;color:#888;font-family:\'Anek Kannada\',sans-serif">' + cand.name_kn + '</span>' : '') + ' <span style="font-weight:400;color:#666">' + fmtClass(cand.class) + '</span></div>' +
+          (cand.symbol_url ? '<img src="' + cand.symbol_url + '" style="width:22px;height:22px;object-fit:contain">' : '<span style="font-size:16px">' + (SYM2[cand.symbol] || '') + '</span>') +
+          '</div>' +
+          '<div class="bar-bg"><div class="bar-fill" style="width:' + pct2 + '%;' + (isNota ? 'background:#ff9800' : '') + '"></div></div>' +
+          '<div class="count">' + cand.vote_count + '</div>';
+        section.appendChild(row);
+      });
+      rv.firstChild.appendChild(section);
+    });
+  }
+
+  // Back and Print buttons
+  const btnRow = el('div', { style: 'display:flex;gap:8px;margin-top:16px', className: 'no-print' },
+    el('button', { className: 'btn', onClick: () => closeResults() }, '\u2190 ' + __('back')),
+    el('button', { className: 'btn btn-primary', onClick: () => window.print() }, __('print'))
+  );
+  rv.firstChild.appendChild(btnRow);
+}
+
+function closeResults() {
+  resultsElectionId = null;
+  if (resultsWs) { try { resultsWs.close(); } catch(e) {} resultsWs = null; }
+  $('results-view').style.display = 'none';
+  showPage('elections');
+}
+
+async function loadSettings() {
+  const section = $('setting-section');
+  section.innerHTML = '';
+  const settings = await api('/admin/settings');
+  const card = el('div', { className: 'card' },
+    el('h2', {}, __('settings')),
+    el('p', { style: 'color:#666;font-size:13px;margin-bottom:16px' }, __('settings_desc'))
+  );
+  const nameGroup = el('div', { className: 'form-group' },
+    el('label', {}, __('school_name')),
+    el('input', { id: 'school-name', value: settings.school_name || '', placeholder: 'e.g., Government High School, Mysore' })
+  );
+  card.appendChild(nameGroup);
+  const logoGroup = el('div', { className: 'form-group' },
+    el('label', {}, __('school_logo_url')),
+    el('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' },
+      el('input', { id: 'school-logo', value: settings.school_logo_url || '', placeholder: 'URL of school logo image', style: 'flex:1;min-width:120px;margin-bottom:0' }),
+      el('button', { className: 'btn btn-sm', onClick: () => { const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const fd=new FormData();fd.append('image',f);fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{$('school-logo').value=d.url;$('logo-preview').src=d.url;$('logo-preview').style.display='block';}).catch(()=>alert('Upload failed'));};i.click();} }, __('browse')),
+      el('img', { id: 'logo-preview', src: settings.school_logo_url || '', style: 'width:48px;height:48px;object-fit:contain;border:1px solid #ddd;border-radius:6px;display:' + (settings.school_logo_url ? 'block' : 'none') })
+    )
+  );
+  card.appendChild(logoGroup);
+  const hint = el('p', { style: 'font-size:12px;color:#888;margin-bottom:12px' },
+    __('logo_hint')
+  );
+  card.appendChild(hint);
+  const saveBtn = el('button', { className: 'btn btn-primary', onClick: saveSettings }, __('save'));
+  card.appendChild(saveBtn);
+  section.appendChild(card);
+  $('school-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveSettings(); });
+  $('school-logo').addEventListener('keydown', e => { if (e.key === 'Enter') saveSettings(); });
+  // Live preview on input change
+  const logoInput = $('school-logo');
+  logoInput.addEventListener('input', () => {
+    const prev = $('logo-preview');
+    if (logoInput.value) { prev.src = logoInput.value; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+  });
+}
+
+async function saveSettings() {
+  const schoolName = $('school-name').value.trim();
+  const schoolLogoUrl = $('school-logo').value.trim();
+  await api('/admin/settings', { method: 'PUT', body: { school_name: schoolName, school_logo_url: schoolLogoUrl } });
+  alert(__('settings_saved'));
+}
+
+_isAdminPage = true;
+initLanguage();
+document.getElementById('lang-toggle-wrapper').appendChild(langToggleButton());
+loadElections();
+loadBindings();
+</script>
+</body>
+</html>

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Vote</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%B3%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Anek+Kannada:wght@400;500;600;700;800;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes ledGlow {
+  0%, 100% { box-shadow: 0 0 5px #ff0000; }
+  50% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+}
+
+@keyframes voteFlash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+
+@keyframes fallDown {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(120px); opacity: 0; }
+}
+
+.otp-shake { animation: shake 0.4s ease; }
+.otp-fall { animation: fallDown 0.5s ease forwards; }
+
+body {
+  font-family: 'Space Grotesk', 'Segoe UI', -apple-system, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+body.lang-en input, body.lang-en textarea, body.lang-en select, body.lang-en button,
+body:not(.lang-kn) input, body:not(.lang-kn) textarea, body:not(.lang-kn) select, body:not(.lang-kn) button { font-family: 'Space Grotesk', 'Segoe UI', -apple-system, sans-serif; }
+body.lang-kn { font-family: 'Anek Kannada', 'Segoe UI', -apple-system, sans-serif; }
+body.lang-kn input, body.lang-kn textarea, body.lang-kn select, body.lang-kn button { font-family: 'Anek Kannada', 'Segoe UI', -apple-system, sans-serif; }
+.lang-toggle { font-family: 'Anek Kannada', 'Space Grotesk', 'Segoe UI', -apple-system, sans-serif; }
+
+.evm-container {
+  width: 100vw;
+  height: 100vh;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.led-strip {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.led-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.led-light {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0f9b0f;
+  box-shadow: 0 0 6px #0f9b0f;
+  transition: all 0.3s;
+}
+
+.led-light.active {
+  background: #dc3545;
+  box-shadow: 0 0 10px #dc3545;
+  animation: ledGlow 1s ease-in-out infinite;
+}
+
+.led-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.led-label.active { color: #dc3545; }
+
+.booth-name {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.position-header {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.position-header h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1565C0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.position-header p {
+  font-size: 11px;
+  color: #666;
+}
+
+.candidate-list {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 6px;
+  align-content: start;
+}
+
+.candidate-card {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 10px;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  min-width: 0;
+  aspect-ratio: 6 / 1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.candidate-card:hover {
+  border-color: #1565C0;
+  background: #e3f2fd;
+}
+
+.candidate-card:active {
+  transform: scale(0.97);
+}
+
+.candidate-card.nota-card {
+  border-color: #e0e0e0;
+}
+
+.candidate-card.nota-card:hover {
+  border-color: #f57f17;
+  background: #fff8e1;
+}
+
+.candidate-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.candidate-serial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  color: #ffd700;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.candidate-photo, .candidate-photo-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.candidate-photo-placeholder {
+  background: #e8eaf6;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.candidate-name-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+.candidate-name {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.candidate-name-kn {
+  font-size: 15px;
+  color: #555;
+  font-family: 'Anek Kannada', 'Segoe UI', -apple-system, sans-serif;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.candidate-name-sep {
+  color: #aaa;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.candidate-symbol-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #e8eaf6;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.candidate-symbol {
+  width: 44px;
+  height: 44px;
+  background: #e8eaf6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Thank you screen */
+.thank-you {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.thank-you .icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.thank-you h1 {
+  font-size: 28px;
+  color: #4caf50;
+  margin-bottom: 8px;
+}
+
+.thank-you p {
+  color: #666;
+  font-size: 16px;
+}
+
+/* Login screen */
+.login-screen {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.login-screen h1 {
+  font-size: 24px;
+  color: #1565C0;
+  margin-bottom: 20px;
+}
+
+.login-screen input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  background: #fff;
+  color: #1a1a2e;
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.login-screen input:focus {
+  outline: none;
+  border-color: #1565C0;
+}
+
+.login-screen button {
+  width: 100%;
+  padding: 14px;
+  background: #1565C0;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-screen button:hover { background: #1976D2; }
+
+/* NOTA */
+.nota-btn {
+  background: #fff;
+  border: 3px solid #e0e0e0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  color: #666;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nota-btn:hover { border-color: #999; }
+.nota-btn.selected { border-color: #ff9800; background: #fff8e1; color: #f57f17; }
+</style>
+</head>
+<body>
+<div class="evm-container" id="app">
+  <!-- LED Strip -->
+  <div class="led-strip">
+    <div class="led-indicator">
+      <div class="led-light" id="led-light"></div>
+      <span class="led-label" id="led-label" data-i18n="ready">READY</span>
+    </div>
+    <span class="booth-name" id="booth-name" data-i18n="booth_name_label">🗳️ e-Vote</span>
+    <span id="lang-toggle-wrapper-voter"></span>
+  </div>
+
+  <!-- Status Bar -->
+
+
+  <!-- Dynamic Content -->
+  <div id="main-content" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+</div>
+
+<script src="/js/lang.js"></script>
+<script>
+const API = '/api';
+const SYMBOLS = {
+  star: '\u2605', heart: '\u2764', diamond: '\u2666', circle: '\u25CF',
+  square: '\u25A0', triangle: '\u25B2', flower: '\u273F', book: '\uD83D\uDCD6',
+  hand: '\u270B', sun: '\u2600', moon: '\uD83C\uDF19', tree: '\uD83C\uDF33',
+  car: '\uD83D\uDE97', flag: '\uD83C\uDFF3', lion: '\uD83E\uDD81'
+};
+
+let booth = null;
+let voterId = null;
+let election = null;
+let positions = [];
+let currentPositionIndex = 0;
+let votedPositions = [];
+let currentBoothCode = null;
+let evmNumber = null;
+
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playBeep(duration = 200, freq = 800) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.8, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+    osc.start();
+    osc.stop(ctx.currentTime + duration / 1000);
+  } catch (e) { /* silent fail */ }
+}
+
+function playVoteSound() {
+  playBeep(1000, 880);
+}
+
+function setLED(active) {
+  const light = document.getElementById('led-light');
+  const label = document.getElementById('led-label');
+  if (active) {
+    light.classList.add('active');
+    label.classList.add('active');
+    label.textContent = __('voted');
+  } else {
+    light.classList.remove('active');
+    label.classList.remove('active');
+    label.textContent = __('ready');
+  }
+}
+
+function $(id) { return document.getElementById(id); }
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'className') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else e.setAttribute(k, v);
+  });
+  children.forEach(c => { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else if (c) e.appendChild(c); });
+  return e;
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({error: 'Error'})); throw new Error(e.error || 'Error'); }
+  return res.json();
+}
+
+async function registerEvm() {
+  if (!currentBoothCode) return null;
+  try {
+    const result = await api('/evm/register', { method: 'POST', body: { boothCode: currentBoothCode } });
+    if (result && result.evmNumber) {
+      evmNumber = result.evmNumber;
+      return result;
+    }
+  } catch (e) {}
+  return null;
+}
+
+let evmApproved = false;
+
+async function waitForEvmApproval(timeout = 120000) {
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeout;
+    const check = async () => {
+      try {
+        const res = await api('/evm/register', { method: 'POST', body: { boothCode: currentBoothCode } });
+        if (res.status !== 'pending') { evmApproved = true; resolve(); return; }
+      } catch (e) {}
+      if (Date.now() > deadline) { reject(new Error('Approval timed out')); return; }
+      setTimeout(check, 2000);
+    };
+    check();
+  });
+}
+
+function showAwaitingApproval() {
+  const mc = $('main-content');
+  mc.innerHTML = '';
+  const container = el('div', { style: 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:20px;padding:40px;text-align:center' });
+  container.appendChild(el('div', { style: 'font-size:64px' }, '\u23F3'));
+  container.appendChild(el('h2', { style: 'color:#ffd700;font-size:24px' }, __('awaiting_approval')));
+  container.appendChild(el('p', { style: 'color:#aaa;font-size:16px;max-width:400px' }, __('evm_pending_desc')));
+  container.appendChild(el('div', { style: 'width:40px;height:40px;border:4px solid #444;border-top:4px solid #ffd700;border-radius:50%;animation:spin 1s linear infinite' }));
+  mc.appendChild(container);
+  // Inject spinner keyframe
+  if (!document.getElementById('spin-key')) {
+    const style = document.createElement('style');
+    style.id = 'spin-key';
+    style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+  waitForEvmApproval().then(() => {
+    showOTPEntry(currentBoothCode);
+  }).catch(() => {
+    showBoothLogin();
+  });
+}
+
+async function sendEvmStatus(status) {
+  if (!currentBoothCode || !evmNumber) return;
+  try {
+    await fetch(API + '/evm/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boothCode: currentBoothCode, evmNumber, status })
+    });
+  } catch (e) {}
+}
+
+// --- State persistence ---
+const STATE_KEY = 'evote_state';
+
+function saveState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      boothCode: currentBoothCode,
+      voterId, electionId: election ? election.id : null,
+      positionIndex: currentPositionIndex,
+      votedPositions,
+      evmNumber
+    }));
+  } catch (e) {}
+}
+
+function clearVoterState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      localStorage.setItem(STATE_KEY, JSON.stringify({ boothCode: s.boothCode }));
+    }
+  } catch (e) {}
+}
+
+async function restoreState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (s.voterId && s.electionId) {
+      currentBoothCode = s.boothCode;
+      voterId = s.voterId;
+      currentPositionIndex = s.positionIndex || 0;
+      votedPositions = s.votedPositions || [];
+      evmNumber = s.evmNumber || null;
+      // Reconstruct from server
+      const boothRes = await api('/booth/verify', { method: 'POST', body: { code: currentBoothCode } });
+      if (boothRes.error) { localStorage.removeItem(STATE_KEY); return false; }
+      booth = boothRes;
+      $('booth-name').textContent = booth.name;
+      const data = await api('/voter/election/' + s.electionId);
+      if (data.error) { localStorage.removeItem(STATE_KEY); return false; }
+      election = data.election;
+      positions = data.positions;
+      renderPosition();
+      return true;
+    }
+    if (s.boothCode) {
+      const elections = await api('/elections');
+      const hasActive = elections.some(e => e.status === 'active');
+      if (!hasActive) { localStorage.removeItem(STATE_KEY); return false; }
+      showOTPEntry(s.boothCode);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+// Try saved state first, then URL param, then booth login
+(async function init() {
+  const urlParams = new URLSearchParams(location.search);
+  const boothCode = urlParams.get('booth');
+  if (boothCode) currentBoothCode = boothCode.toUpperCase();
+
+  const elections = await api('/elections');
+  const hasActive = elections.some(e => e.status === 'active');
+
+  const restored = await restoreState();
+  if (!restored) {
+    if (currentBoothCode) {
+      clearVoterState();
+      localStorage.setItem(STATE_KEY, JSON.stringify({ boothCode: currentBoothCode }));
+      const evmResult = await registerEvm();
+      if (evmResult && evmResult.status === 'pending') { showAwaitingApproval(); return; }
+      if (!hasActive) { showNoActiveElection(); return; }
+      showOTPEntry(currentBoothCode);
+    } else {
+      showBoothLogin();
+    }
+  }
+})();
+
+function showNoActiveElection() {
+  const mc = $('main-content');
+  mc.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:0;padding:20px;text-align:center">' +
+    '<div style="font-size:64px;margin-bottom:16px">🗳️</div>' +
+    '<h2 style="color:#f57f17;margin-bottom:8px">No Active Election</h2>' +
+    '<p style="color:#666;font-size:14px">Please wait for the administrator to start an election.</p>' +
+    '<p style="color:#999;font-size:12px;margin-top:16px">Checking automatically...</p></div>';
+  setTimeout(async () => {
+    const elections = await api('/elections');
+    if (elections.some(e => e.status === 'active')) { showBoothLogin(); }
+    else { showNoActiveElection(); }
+  }, 5000);
+}
+
+function showBoothLogin() {
+  const mc = $('main-content');
+  mc.innerHTML = '';
+  const login = el('div', { className: 'login-screen' },
+    el('h1', { style: 'font-size:32px;margin-bottom:12px' }, __('e_vote_title')),
+    el('p', { style: 'color:#aaa;margin-bottom:24px;font-size:16px' }, 'Enter your 6-letter booth code'),
+    el('input', { id: 'booth-code-input', type: 'text', placeholder: 'e.g., SCHOOL', style: 'width:200px;font-family:monospace;text-align:center;font-size:28px;letter-spacing:6px;text-transform:uppercase;margin-bottom:16px', maxLength: 6, onInput: (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,6); } }),
+    el('button', { onClick: async () => {
+      const code = $('booth-code-input').value.trim();
+      if (!code || code.length !== 6) return alert('Enter a valid 6-letter booth code');
+      const boothRes = await api('/booth/verify', { method: 'POST', body: { code } });
+      if (boothRes.error) { alert('Invalid booth code'); return; }
+      booth = boothRes;
+      $('booth-name').textContent = booth.name;
+      currentBoothCode = code;
+      const evmResult = await registerEvm();
+      if (evmResult && evmResult.status === 'pending') { showAwaitingApproval(); return; }
+      const elections = await api('/elections');
+      const hasActive = elections.some(e => e.status === 'active');
+      if (!hasActive) { showNoActiveElection(); return; }
+      showOTPEntry(code);
+    }}, 'Next')
+  );
+  mc.appendChild(login);
+}
+
+function showOTPEntry(code) {
+  currentBoothCode = code;
+  sendEvmStatus('ready');
+  saveState();
+  const mc = $('main-content');
+  mc.innerHTML = '';
+  const container = el('div', { style: 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:0;padding:10px' });
+  container.appendChild(el('h2', { style: 'color:#ffd700;margin-bottom:8px;font-size:28px' }, 'Enter OTP'));
+  container.appendChild(el('p', { style: 'color:#aaa;font-size:16px;margin-bottom:24px' }, 'Enter the 6-digit OTP from your voter slip'));
+
+  let verifying = false;
+
+  const otpRow = el('div', { id: 'otp-row', style: 'display:flex;gap:10px;justify-content:center;margin-bottom:20px' });
+  const otpInputs = [];
+  for (let i = 0; i < 6; i++) {
+    const inp = el('input', {
+      type: 'text',
+      maxLength: 1,
+      id: 'otp-' + i,
+      style: 'width:60px;height:72px;font-size:32px;font-weight:800;text-align:center;font-family:monospace;border:3px solid #444;border-radius:10px;background:#2d2d44;color:#fff;margin:0;padding:0;transition:all 0.3s',
+      onInput: (e) => {
+        if (verifying) return;
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        if (e.target.value && i < 5) {
+          otpInputs[i + 1].focus();
+        } else if (e.target.value && i === 5) {
+          // Auto-verify on 6th digit
+          otpInputs[i].blur();
+          verifyOTP();
+        }
+      },
+      onKeydown: (e) => {
+        if (verifying) return;
+        if (e.key === 'Backspace' && !e.target.value && i > 0) otpInputs[i - 1].focus();
+      }
+    });
+    otpInputs.push(inp);
+    otpRow.appendChild(inp);
+  }
+  container.appendChild(otpRow);
+
+  container.appendChild(el('button', {
+    style: 'background:none;border:none;color:#888;font-size:14px;margin-top:12px;cursor:pointer;display:block;width:100%',
+    onClick: () => showBoothLogin()
+  }, '\u2190 ' + __('cancel')));
+
+  mc.appendChild(container);
+  setTimeout(() => otpInputs[0].focus(), 100);
+
+  function fallAndReset() {
+    verifying = true;
+    // Disable inputs during animation
+    otpInputs.forEach(inp => inp.disabled = true);
+    // Shake
+    otpRow.classList.add('otp-shake');
+    otpInputs.forEach(inp => inp.style.borderColor = '#e53935');
+    setTimeout(() => {
+      otpRow.classList.remove('otp-shake');
+      // Fall
+      otpInputs.forEach((inp, idx) => {
+        inp.style.transition = 'all 0.4s ease';
+        inp.style.transform = 'translateY(120px)';
+        inp.style.opacity = '0';
+      });
+      setTimeout(() => {
+        // Reset inputs
+        otpInputs.forEach((inp, idx) => {
+          inp.value = '';
+          inp.style.transform = '';
+          inp.style.opacity = '';
+          inp.style.borderColor = '#444';
+          inp.disabled = false;
+        });
+        verifying = false;
+        otpInputs[0].focus();
+      }, 500);
+    }, 400);
+  }
+
+  async function verifyOTP() {
+    if (verifying) return;
+    const otp = otpInputs.map(inp => inp.value).join('');
+    if (otp.length !== 6) return;
+    verifying = true;
+    otpInputs.forEach(inp => inp.disabled = true);
+    try {
+      const boothRes = await api('/booth/verify', { method: 'POST', body: { code: currentBoothCode } });
+      if (boothRes.error) { fallAndReset(); return; }
+      booth = boothRes;
+      $('booth-name').textContent = booth.name;
+      await registerEvm();
+      sendEvmStatus('voting');
+      evmApproved = true;
+      const elections = await api('/elections');
+      const active = elections.find(e => e.status === 'active');
+      if (!active) { showNoActiveElection(); return; }
+
+      const verifyRes = await api('/voter/verify-otp', { method: 'POST', body: { boothCode: currentBoothCode, otp } });
+      if (verifyRes.error) { fallAndReset(); return; }
+
+      voterId = verifyRes.voterId;
+      booth = verifyRes.booth;
+      $('booth-name').textContent = booth.name;
+
+      const data = await api('/voter/election/' + active.id);
+      election = data.election;
+      positions = data.positions;
+      currentPositionIndex = 0;
+      votedPositions = [];
+    renderPosition();
+    saveState();
+    } catch (e) {
+      fallAndReset();
+    }
+  }
+}
+
+
+
+function renderPosition() {
+  const mc = $('main-content');
+  mc.innerHTML = '';
+
+  if (currentPositionIndex >= positions.length) {
+    showThankYou();
+    return;
+  }
+
+  const pos = positions[currentPositionIndex];
+  setLED(false);
+
+  // Position header
+  mc.appendChild(el('div', { className: 'position-header' },
+    el('h2', {}, pos.title),
+    el('p', {}, __('position_of') + ' ' + (currentPositionIndex + 1) + ' ' + __('of') + ' ' + positions.length)
+  ));
+
+  // Candidate grid
+  const list = el('div', { className: 'candidate-list' });
+
+  // Regular candidates
+  const regular = pos.candidates.filter(c => !c.is_nota);
+  regular.forEach(c => {
+    const serialNo = c.serial || '';
+    const symbolChar = SYMBOLS[c.symbol] || '\u2605';
+    const hasSymbolImg = c.symbol_url && c.symbol_url !== '';
+
+    const card = el('div', { className: 'candidate-card', onClick: () => castVoteFor(c) });
+    card.innerHTML =
+      '<div class="candidate-serial">' + serialNo + '</div>' +
+      (c.photo_url ? '<img src="' + c.photo_url + '" class="candidate-photo" onerror="this.style.display=\'none\'">' : '<div class="candidate-photo-placeholder">' + symbolChar + '</div>') +
+      '<div class="candidate-name-wrap">' +
+        '<span class="candidate-name">' + c.name + '</span>' +
+        (c.name_kn ? '<span class="candidate-name-sep"> / </span><span class="candidate-name-kn">' + c.name_kn + '</span>' : '') +
+      '</div>' +
+      (hasSymbolImg ? '<img src="' + c.symbol_url + '" class="candidate-symbol-img" onerror="this.style.display=\'none\'">' : '<div class="candidate-symbol">' + symbolChar + '</div>');
+    list.appendChild(card);
+  });
+
+  // NOTA - always last
+  const nota = pos.candidates.filter(c => c.is_nota);
+  if (nota.length > 0) {
+    const n = nota[0];
+    const card = el('div', { className: 'candidate-card nota-card', onClick: () => castVoteFor(n) });
+    card.innerHTML =
+      '<div class="candidate-serial" style="color:#ff9800">\u2717</div>' +
+      '<div class="candidate-photo-placeholder" style="background:#e8eaf6;color:#666;font-size:11px;font-weight:800">NOTA</div>' +
+      '<div class="candidate-name-wrap">' +
+        '<span class="candidate-name" style="color:#ff9800">NOTA</span>' +
+        '<span class="candidate-name-sep"> / </span>' +
+        '<span class="candidate-name-kn">\u0CAE\u0CC7\u0CB2\u0CBF\u0CA8 \u0CAF\u0CBE\u0CB5\u0CC1\u0CA6\u0CC2 \u0C85\u0CB2\u0CCD\u0CB2</span>' +
+      '</div>' +
+      '<div class="candidate-symbol" style="background:#e8eaf6;color:#666;font-size:11px;font-weight:800">\u2014</div>';
+    list.appendChild(card);
+  }
+
+  mc.appendChild(list);
+}
+
+let voteInProgress = false;
+
+async function castVoteFor(candidate) {
+  if (voteInProgress) return;
+  voteInProgress = true;
+
+  const pos = positions[currentPositionIndex];
+
+  setLED(true);
+  playVoteSound();
+
+  const castRes = await api('/voter/cast', {
+    method: 'POST',
+    body: {
+      electionId: election.id,
+      positionId: pos.id,
+      candidateId: candidate.id,
+      voterId: voterId,
+      boothId: booth ? booth.id : null
+    }
+  });
+
+  if (castRes.error) { voteInProgress = false; return; }
+
+  votedPositions.push({ position: pos.title, candidate: candidate.name });
+
+  setTimeout(() => {
+    voteInProgress = false;
+    currentPositionIndex++;
+    renderPosition();
+    saveState();
+  }, 1500);
+}
+
+function showThankYou() {
+  clearVoterState();
+  api('/voter/finalize', { method: 'POST', body: { voterId, evmNumber } });
+
+  const mc = $('main-content');
+  mc.innerHTML = '';
+  setLED(false);
+  document.getElementById('led-label').textContent = __('done_label');
+
+  // Long completion beep
+  playBeep(4800, 660);
+
+  let summary = '<div class="thank-you">' +
+    '<div class="icon">\u2705</div>' +
+    '<h1>' + __('thank_you') + '</h1>' +
+    '<p>' + __('vote_recorded') + '</p>';
+
+  if (votedPositions.length > 0) {
+    summary += '<div style="margin-top:20px;text-align:left;background:#2d2d44;border-radius:12px;padding:16px">';
+    votedPositions.forEach(v => {
+      summary += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #444;font-size:13px">' +
+        '<span style="color:#888">' + v.position + '</span><span style="color:#fff;font-weight:600">' + v.candidate + '</span></div>';
+    });
+    summary += '</div>';
+  }
+
+  summary += '<p style="margin-top:24px;font-size:12px;color:#666">' + __('next_voter_ready') + '</p></div>';
+  mc.innerHTML = summary;
+
+  // Reset for next voter after 5 seconds
+  setTimeout(() => {
+    voterId = null;
+    election = null;
+    positions = [];
+    currentPositionIndex = 0;
+    votedPositions = [];
+    setLED(false);
+    document.getElementById('led-label').textContent = __('ready_label');
+    showOTPEntry(currentBoothCode);
+  }, 5000);
+}
+
+// Handle back/forward navigation - prevent leaving during voting
+window.addEventListener('beforeunload', (e) => {
+  if (voterId && currentPositionIndex < positions.length) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+initLanguage();
+</script>
+</body>
+</html>
