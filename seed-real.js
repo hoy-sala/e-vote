@@ -2,19 +2,7 @@ const db = require('./db');
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const d = new Database(path.join(__dirname, 'data', 'evote.db'));
-d.exec('DELETE FROM votes');
-d.exec('DELETE FROM voters');
-d.exec('DELETE FROM otps');
-d.exec('DELETE FROM candidates');
-d.exec('DELETE FROM positions');
-d.exec('DELETE FROM booths');
-d.exec('DELETE FROM elections');
-d.close();
-
-const e1 = db.createElection('Student Council Election 2025', 'Annual student council elections for the academic year 2025-26');
-db.setElectionStatus(e1.lastInsertRowid, 'active');
-const eid = e1.lastInsertRowid;
+const eid = db.createElection('Student Parliament Election 2026-27', 'Annual student council elections for the academic year 2026-27').lastInsertRowid;
 
 function pos(title, desc, order) {
   return db.createPosition(eid, title, desc, order, 1).lastInsertRowid;
