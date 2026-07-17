@@ -113,8 +113,8 @@ function connectWs() {
     if (data.type === 'vote_cast' || data.type === 'voter_done' || data.type === 'election_status' || data.type === 'votes_reset') {
       if (currentElectionId) refreshProgress(currentElectionId);
     }
-    if (data.type === 'evm_added' || data.type === 'evm_status' || data.type === 'evm_vote') {
-      if (data.boothCode === currentBoothCode) refreshEvms();
+    if (data.type === 'votes_reset' || data.type === 'evm_added' || data.type === 'evm_status' || data.type === 'evm_vote') {
+      if (data.type === 'votes_reset' || data.boothCode === currentBoothCode) refreshEvms();
     }
     if (data.type === 'booth_device_approved') {
       if (!boothApproved) { boothApproved = true; location.reload(); }
